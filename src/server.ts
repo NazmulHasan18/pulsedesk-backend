@@ -2,6 +2,7 @@ import { Server } from "http";
 import app from "./app";
 import env from "./config/env";
 import { prisma } from "./lib/prisma";
+import { seed } from "./helpers/seed";
 
 let server: Server;
 
@@ -10,7 +11,7 @@ async function main() {
     await prisma.$connect();
     // eslint-disable-next-line no-console
     console.log("✅ Database connected");
-
+    await seed();
     server = app.listen(env.PORT, () => {
       // eslint-disable-next-line no-console
       console.log(`🚀 PulseDesk API listening on port ${env.PORT}`);

@@ -1,10 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-import env from "../src/config/env.js";
+import env from "../config/env.js";
+import { prisma } from "../lib/prisma.js";
 
-const prisma = new PrismaClient();
-
-async function main() {
+export async function seed() {
   const email = env.SEED_SUPERADMIN_EMAIL || "superadmin@pulsedesk.dev";
   const password = env.SEED_SUPERADMIN_PASSWORD || "ChangeMe123!";
 
@@ -27,12 +26,3 @@ async function main() {
   console.log(`✅ Super-admin seeded: ${email} (password: ${password})`);
   console.log("⚠️  Change this password immediately in a real environment.");
 }
-
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });

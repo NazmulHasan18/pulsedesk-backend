@@ -7,7 +7,6 @@ import env from "../config/env.js";
 import { prisma } from "../lib/prisma.js";
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: TJwtPayload;

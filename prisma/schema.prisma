@@ -40,6 +40,7 @@ model Company {
   plan     String @default("free")
 
   agents        Agent[]
+  customers     Customer[]
   conversations Conversation[]
   faqDocs       FaqDoc[]
 
@@ -87,6 +88,33 @@ model SuperAdmin {
   @@map("super_admins")
 }
 
+// An anonymous end-customer (widget visitor) of a company. No login/password —
+// identified by a client-generated externalId (e.g. persisted in the widget's
+// localStorage) so repeat visits/conversations resolve back to the same person.
+// Scoped per-company: the same browser talking to two different companies'
+// widgets produces two separate Customer rows.
+model Customer {
+  id         String  @id @default(cuid())
+  publicId   String  @unique @default(cuid())
+  externalId String // widget-generated visitor id, persisted client-side
+  name       String?
+  email      String?
+  metadata   Json? // arbitrary attributes the widget/company attaches (page URL, plan, custom fields, ...)
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  conversations Conversation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, externalId])
+  @@index([companyId])
+  @@index([companyId, email])
+  @@map("customers")
+}
+
 // A single chat thread between an anonymous end-customer and a company (AI and/or agent).
 model Conversation {
   id       String             @id @default(cuid())
@@ -97,6 +125,9 @@ model Conversation {
   companyId String
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
   assignedAgentId String?
   assignedAgent   Agent?  @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
 
@@ -106,6 +137,7 @@ model Conversation {
   updatedAt DateTime @updatedAt
 
   @@index([companyId])
+  @@index([customerId])
   @@index([assignedAgentId])
   @@map("conversations")
 }
