@@ -1,0 +1,147 @@
+// PulseDesk — Prisma schema
+// Multi-tenancy model: everything scopes via Company (site-id -> companyId)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AgentRole {
+  ADMIN
+  AGENT
+}
+
+enum ConversationStatus {
+  OPEN
+  PENDING
+  CLOSED
+}
+
+enum ConversationSource {
+  AI
+  AGENT
+}
+
+enum MessageSender {
+  CUSTOMER
+  AGENT
+  AI
+}
+
+// A company that has embedded the PulseDesk widget.
+model Company {
+  id       String @id @default(cuid())
+  publicId String @unique @default(cuid())
+  name     String
+  siteId   String @unique // used in the embed script: data-site-id
+  plan     String @default("free")
+
+  agents        Agent[]
+  conversations Conversation[]
+  faqDocs       FaqDoc[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("companies")
+}
+
+// A company-side user: either an ADMIN (manages company + agents) or AGENT (handles chats).
+model Agent {
+  id           String    @id @default(cuid())
+  publicId     String    @unique @default(cuid())
+  name         String
+  email        String    @unique
+  password     String
+  role         AgentRole @default(AGENT)
+  isOnline     Boolean   @default(false)
+  tokenVersion Int       @default(0) // bumped to invalidate old JWTs (logout-all / password change)
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  assignedConversations Conversation[] @relation("AssignedAgent")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@map("agents")
+}
+
+// Platform-level super-admin, oversees all companies. Seeded, not self-registered.
+model SuperAdmin {
+  id           String @id @default(cuid())
+  publicId     String @unique @default(cuid())
+  name         String
+  email        String @unique
+  password     String
+  tokenVersion Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("super_admins")
+}
+
+// A single chat thread between an anonymous end-customer and a company (AI and/or agent).
+model Conversation {
+  id       String             @id @default(cuid())
+  publicId String             @unique @default(cuid())
+  status   ConversationStatus @default(OPEN)
+  source   ConversationSource @default(AI)
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  assignedAgentId String?
+  assignedAgent   Agent?  @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([assignedAgentId])
+  @@map("conversations")
+}
+
+// A single message within a conversation.
+model Message {
+  id         String        @id @default(cuid())
+  publicId   String        @unique @default(cuid())
+  senderType MessageSender
+  content    String
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+// A company's FAQ knowledge-base entry, used for embeddings + similarity search (RAG).
+model FaqDoc {
+  id       String @id @default(cuid())
+  publicId String @unique @default(cuid())
+  question String
+  answer   String
+
+  // Placeholder for the embedding vector until pgvector is wired up (Unsupported("vector") + raw SQL).
+  embedding Json?
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@map("faq_docs")
+}
