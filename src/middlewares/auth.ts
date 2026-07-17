@@ -53,11 +53,15 @@ const auth = (userType?: TUserType, ...allowedRoles: string[]) => {
     if (decoded.userType === "agent") {
       const agent = await prisma.agent.findUnique({
         where: { publicId: decoded.id },
-        select: { tokenVersion: true },
+        select: { tokenVersion: true, isActive: true },
       });
 
       if (!agent || agent.tokenVersion !== decoded.tokenVersion) {
         throw new AppError(httpStatus.UNAUTHORIZED, "Session expired, please log in again");
+      }
+
+      if (!agent.isActive) {
+        throw new AppError(httpStatus.FORBIDDEN, "Your account is deactivated");
       }
     } else {
       const superAdmin = await prisma.superAdmin.findUnique({

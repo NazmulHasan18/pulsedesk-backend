@@ -96,6 +96,10 @@ const loginAgent = async (payload: TLoginPayload) => {
     throw new AppError(httpStatus.UNAUTHORIZED, "Invalid email or password");
   }
 
+  if (!agent.isActive) {
+    throw new AppError(httpStatus.FORBIDDEN, "Your account is deactivated");
+  }
+
   const isPasswordValid = await bcrypt.compare(payload.password, agent.password);
 
   if (!isPasswordValid) {
@@ -173,6 +177,10 @@ const refreshToken = async (token: string) => {
 
     if (!agent || agent.tokenVersion !== decoded.tokenVersion) {
       throw new AppError(httpStatus.UNAUTHORIZED, "Session expired, please log in again");
+    }
+
+    if (!agent.isActive) {
+      throw new AppError(httpStatus.FORBIDDEN, "Your account is deactivated");
     }
 
     const accessToken = signToken(
@@ -289,6 +297,7 @@ const getMe = async (user: TJwtPayload) => {
       name: agent.name,
       email: agent.email,
       role: agent.role,
+      isActive: agent.isActive,
       isOnline: agent.isOnline,
       company: {
         publicId: agent.company.publicId,

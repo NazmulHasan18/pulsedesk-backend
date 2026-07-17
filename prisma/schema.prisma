@@ -38,6 +38,7 @@ model Company {
   name     String
   siteId   String @unique // used in the embed script: data-site-id
   plan     String @default("free")
+  settings Json?
 
   agents        Agent[]
   customers     Customer[]
@@ -58,6 +59,7 @@ model Agent {
   email        String    @unique
   password     String
   role         AgentRole @default(AGENT)
+  isActive     Boolean   @default(true)
   isOnline     Boolean   @default(false)
   tokenVersion Int       @default(0) // bumped to invalidate old JWTs (logout-all / password change)
 
