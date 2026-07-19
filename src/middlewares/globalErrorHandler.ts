@@ -15,11 +15,14 @@ const globalErrorHandler = (err: unknown, req: Request, res: Response, _next: Ne
 
   if (err instanceof ZodError) {
     statusCode = httpStatus.BAD_REQUEST;
-    message = "Validation error";
-    errorSources = err.issues.map((issue) => ({
-      path: issue.path.join("."),
-      message: issue.message,
-    }));
+    message = "Validation error: ";
+    errorSources = err.issues.map((issue) => {
+      message = message + issue.message;
+      return {
+        path: issue.path.join("."),
+        message: issue.message,
+      };
+    });
   } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === "P2002") {
       statusCode = httpStatus.CONFLICT;

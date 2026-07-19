@@ -93,7 +93,7 @@ const loginAgent = async (payload: TLoginPayload) => {
   });
 
   if (!agent) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "Invalid email or password");
+    throw new AppError(httpStatus.UNAUTHORIZED, "Invalid email address.");
   }
 
   if (!agent.isActive) {
@@ -103,7 +103,7 @@ const loginAgent = async (payload: TLoginPayload) => {
   const isPasswordValid = await bcrypt.compare(payload.password, agent.password);
 
   if (!isPasswordValid) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "Invalid email or password");
+    throw new AppError(httpStatus.UNAUTHORIZED, "Invalid password entered.");
   }
 
   const tokens = createTokenPair({

@@ -1,4 +1,4 @@
-export type TAgentRole = 'ADMIN' | 'AGENT';
+export type TAgentRole = "ADMIN" | "AGENT";
 
 export type TCreateAgentPayload = {
   name: string;
@@ -26,7 +26,7 @@ export type TAgentStatusPayload = {
 export type TAgentListQuery = {
   search?: string;
   role?: TAgentRole;
-  isActive?: boolean;
+  isActive?: string;
   page?: number;
   limit?: number;
 };

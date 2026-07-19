@@ -1,12 +1,12 @@
-import httpStatus from 'http-status';
-import catchAsync from '../../utils/catchAsync';
-import sendResponse from '../../utils/sendResponse';
-import AppError from '../../utils/AppError';
-import { AgentService } from './agent.service';
+import httpStatus from "http-status";
+import catchAsync from "../../utils/catchAsync";
+import sendResponse from "../../utils/sendResponse";
+import AppError from "../../utils/AppError";
+import { AgentService } from "./agent.service";
 
 const createAgent = catchAsync(async (req, res) => {
   if (!req.user?.companyId) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized!");
   }
 
   const result = await AgentService.createAgent(req.user.companyId, req.body);
@@ -14,14 +14,14 @@ const createAgent = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: 'Agent created successfully',
+    message: "Agent created successfully",
     data: result,
   });
 });
 
 const inviteAgent = catchAsync(async (req, res) => {
   if (!req.user?.companyId) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized!");
   }
 
   const result = await AgentService.inviteAgent(req.user.companyId, req.body);
@@ -29,14 +29,14 @@ const inviteAgent = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: 'Agent invited successfully',
+    message: "Agent invited successfully",
     data: result,
   });
 });
 
 const listAgents = catchAsync(async (req, res) => {
   if (!req.user?.companyId) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized!");
   }
 
   const result = await AgentService.listAgents(req.user.companyId, req.query);
@@ -44,7 +44,7 @@ const listAgents = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Agents retrieved successfully',
+    message: "Agents retrieved successfully",
     meta: result.meta,
     data: result.data,
   });
@@ -52,7 +52,7 @@ const listAgents = catchAsync(async (req, res) => {
 
 const getAgent = catchAsync(async (req, res) => {
   if (!req.user?.companyId) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized!");
   }
 
   const agentId = String(req.params.agentId);
@@ -61,14 +61,14 @@ const getAgent = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Agent retrieved successfully',
+    message: "Agent retrieved successfully",
     data: result,
   });
 });
 
 const updateAgent = catchAsync(async (req, res) => {
   if (!req.user?.companyId) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized!");
   }
 
   const agentId = String(req.params.agentId);
@@ -77,14 +77,14 @@ const updateAgent = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Agent updated successfully',
+    message: "Agent updated successfully",
     data: result,
   });
 });
 
 const deleteAgent = catchAsync(async (req, res) => {
   if (!req.user?.companyId) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized!");
   }
 
   const agentId = String(req.params.agentId);
@@ -93,34 +93,29 @@ const deleteAgent = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Agent deleted successfully',
+    message: "Agent deleted successfully",
   });
 });
 
 const setAgentStatus = catchAsync(async (req, res) => {
   if (!req.user?.companyId) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized!");
   }
 
   const agentId = String(req.params.agentId);
-  const result = await AgentService.setAgentStatus(
-    req.user.companyId,
-    agentId,
-    req.user.id,
-    req.body,
-  );
+  const result = await AgentService.setAgentStatus(req.user.companyId, agentId, req.user.id, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Agent status updated successfully',
+    message: "Agent status updated successfully",
     data: result,
   });
 });
 
 const resetPassword = catchAsync(async (req, res) => {
   if (!req.user?.companyId) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized!");
   }
 
   const agentId = String(req.params.agentId);
@@ -129,7 +124,7 @@ const resetPassword = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Agent password reset successfully',
+    message: "Agent password reset successfully",
     data: result,
   });
 });
