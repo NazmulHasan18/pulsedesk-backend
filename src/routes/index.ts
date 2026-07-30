@@ -6,6 +6,7 @@ import { ConversationRoutes } from "../modules/conversation/conversation.route";
 import { CustomerRoutes } from "../modules/customer/customer.route";
 import { MessageRoutes } from "../modules/message/message.route";
 import { NoteRoutes } from "../modules/note/note.route";
+import { FaqRoutes } from "../modules/faq/faq.route";
 
 const router = Router();
 
@@ -41,6 +42,10 @@ const moduleRoutes: { path: string; route: Router }[] = [
   {
     path: "/widget/conversations/:conversationId/messages",
     route: MessageRoutes.widgetRouter,
+  },
+  {
+    path: "/faq",
+    route: FaqRoutes,
   },
 ];
 

@@ -69,8 +69,9 @@ model Company {
   conversations Conversation[]
   faqDocs       FaqDoc[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  faqCategories FaqCategory[]
 
   @@map("companies")
 }
@@ -231,6 +232,24 @@ model Message {
   @@map("messages")
 }
 
+model FaqCategory {
+  id       String @id @default(cuid())
+  publicId String @unique @default(cuid())
+  name     String
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  faqDocs FaqDoc[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@map("faq_categories")
+}
+
 // A company's FAQ knowledge-base entry, used for embeddings + similarity search (RAG).
 model FaqDoc {
   id       String @id @default(cuid())
@@ -244,9 +263,13 @@ model FaqDoc {
   companyId String
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
+  categoryId String?
+  category   FaqCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([companyId])
+  @@index([categoryId])
   @@map("faq_docs")
 }
