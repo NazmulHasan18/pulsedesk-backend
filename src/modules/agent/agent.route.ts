@@ -1,5 +1,5 @@
 import { Router } from "express";
-import auth from "../../middlewares/auth";
+import auth, { Permission } from "../../middlewares/auth";
 import validateRequest from "../../middlewares/validateRequest";
 import { AgentValidation } from "./agent.validation";
 import { AgentController } from "./agent.controller";
@@ -8,35 +8,35 @@ const router = Router();
 
 router.post(
   "/",
-  auth("agent", "ADMIN"),
+  auth(Permission.agent, Permission.agentAdmin),
   validateRequest(AgentValidation.createAgentSchema),
   AgentController.createAgent,
 );
 
 router.post(
   "/invite",
-  auth("agent", "ADMIN"),
+  auth(Permission.agent, Permission.agentAdmin),
   validateRequest(AgentValidation.inviteAgentSchema),
   AgentController.inviteAgent,
 );
 
 router.get(
   "/",
-  auth("agent", "ADMIN"),
+  auth(Permission.agent, Permission.agentAdmin),
   validateRequest(AgentValidation.listAgentsSchema),
   AgentController.listAgents,
 );
 
 router.get(
   "/:agentId",
-  auth("agent", "ADMIN"),
+  auth(Permission.agent, Permission.agentAdmin),
   validateRequest(AgentValidation.agentIdParamsSchema),
   AgentController.getAgent,
 );
 
 router.patch(
   "/:agentId",
-  auth("agent", "ADMIN"),
+  auth(Permission.agent, Permission.agentAdmin),
   validateRequest(AgentValidation.agentIdParamsSchema),
   validateRequest(AgentValidation.updateAgentSchema),
   AgentController.updateAgent,
@@ -44,14 +44,14 @@ router.patch(
 
 router.delete(
   "/:agentId",
-  auth("agent", "ADMIN"),
+  auth(Permission.agent, Permission.agentAdmin),
   validateRequest(AgentValidation.agentIdParamsSchema),
   AgentController.deleteAgent,
 );
 
 router.patch(
   "/:agentId/status",
-  auth("agent", "ADMIN"),
+  auth(Permission.agent, Permission.agentAdmin),
   validateRequest(AgentValidation.agentIdParamsSchema),
   validateRequest(AgentValidation.agentStatusSchema),
   AgentController.setAgentStatus,
@@ -59,7 +59,7 @@ router.patch(
 
 router.post(
   "/:agentId/reset-password",
-  auth("agent", "ADMIN"),
+  auth(Permission.agent, Permission.agentAdmin),
   validateRequest(AgentValidation.agentIdParamsSchema),
   AgentController.resetPassword,
 );
