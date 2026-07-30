@@ -15,18 +15,20 @@ const createNote = async (
   authorId: string,
   payload: ICreateNotePayload,
 ) => {
-  await assertConversationInCompany(companyId, conversationId);
+  return prisma.$transaction(async (tx) => {
+    await assertConversationInCompany(companyId, conversationId);
 
-  const note = await prisma.conversationNote.create({
-    data: { conversationId, authorId, content: payload.content },
-    include: { author: { select: { id: true, name: true, publicId: true } } },
+    const note = await tx.conversationNote.create({
+      data: { conversationId, authorId, content: payload.content },
+      include: { author: { select: { id: true, name: true, publicId: true } } },
+    });
+
+    await tx.conversationEvent.create({
+      data: { conversationId, type: "NOTE_ADDED", actorId: authorId, actorType: "AGENT" },
+    });
+
+    return note;
   });
-
-  await prisma.conversationEvent.create({
-    data: { conversationId, type: "NOTE_ADDED", actorId: authorId, actorType: "AGENT" },
-  });
-
-  return note;
 };
 
 const getNotes = async (companyId: string, conversationId: string) => {

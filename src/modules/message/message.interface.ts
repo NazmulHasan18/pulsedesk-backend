@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 export interface IAttachment {
   url: string;
   name: string;
@@ -7,7 +9,7 @@ export interface IAttachment {
 
 export interface ISendMessagePayload {
   content: string;
-  attachments?: IAttachment[];
+  attachments?: IAttachment[] | Prisma.InputJsonValue;
 }
 
 export interface IListMessagesQuery {

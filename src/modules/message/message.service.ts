@@ -1,5 +1,5 @@
 import AppError from "../../utils/AppError";
-import { ConversationStatus, MessageSender } from "@prisma/client";
+import { ConversationStatus, MessageSender, Prisma } from "@prisma/client";
 import { IListMessagesQuery, ISendMessagePayload } from "./message.interface";
 import { prisma } from "../../lib/prisma";
 
@@ -33,20 +33,22 @@ const sendMessage = async (
         conversationId,
         senderType,
         content: payload.content,
-        attachments: payload.attachments ?? undefined,
+        attachments: payload.attachments ? (payload.attachments as Prisma.InputJsonValue) : undefined,
       },
     });
 
-    // A customer following up on a CLOSED conversation reopens it.
-    const nextStatus =
-      senderType === "CUSTOMER" && conversation.status === "CLOSED"
-        ? ConversationStatus.OPEN
-        : conversation.status;
-
-    await tx.conversation.update({
+    const currentConversation = await tx.conversation.findUnique({
       where: { id: conversationId },
-      data: { status: nextStatus, updatedAt: new Date() },
+      select: { status: true },
     });
+
+    // A customer following up on a CLOSED conversation reopens it.
+    if (senderType === MessageSender.CUSTOMER && currentConversation?.status === ConversationStatus.CLOSED) {
+      await tx.conversation.updateMany({
+        where: { id: conversationId, status: ConversationStatus.CLOSED },
+        data: { status: ConversationStatus.OPEN, updatedAt: new Date() },
+      });
+    }
 
     return message;
   });
@@ -65,7 +67,7 @@ const getMessages = async (
 
   const messages = await prisma.message.findMany({
     where: { conversationId },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: limit + 1,
     ...(query.cursor && { cursor: { id: query.cursor }, skip: 1 }),
   });
