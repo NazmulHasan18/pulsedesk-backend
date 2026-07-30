@@ -6,7 +6,7 @@ import pick from "../../utils/pick";
 
 const upsertCustomer = catchAsync(async (req, res) => {
   // companyId attached by identifyCompanyFromWidgetKey middleware
-  const companyId = req.companyId as string;
+  const companyId = req.widget?.company.id as string;
 
   const result = await CustomerService.upsertCustomer(companyId, req.body);
 

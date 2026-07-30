@@ -30,7 +30,9 @@ const identifyCompanyFromWidgetKey = catchAsync(async (req: Request, _res: Respo
   //   throw new AppError(httpStatus.FORBIDDEN, "This company account is currently inactive");
   // }
 
-  req.companyId = "company.id";
+  if (req.widget) {
+    req.widget.company.id = "company.id";
+  }
 
   next();
 });

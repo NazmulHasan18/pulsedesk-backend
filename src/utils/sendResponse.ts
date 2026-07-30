@@ -1,9 +1,11 @@
-import { Response } from 'express';
+import { Response } from "express";
 
 type TMeta = {
   page?: number;
   limit?: number;
   total?: number;
+  hasNextPage?: boolean;
+  nextCursor?: string | null;
 };
 
 type TResponse<T> = {

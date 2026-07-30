@@ -217,6 +217,11 @@ model Message {
   senderType MessageSender
   content    String
 
+  // Phase 6 additions
+  attachments      Json? // [{ url, name, mimeType, size }]
+  readByAgentAt    DateTime?
+  readByCustomerAt DateTime?
+
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 

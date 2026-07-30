@@ -9,7 +9,10 @@ import { prisma } from "../lib/prisma.js";
 declare global {
   namespace Express {
     interface Request {
-      companyId?: string;
+      widget?: {
+        company: { id: string; publicId: string; siteId: string };
+        customer: { id: string; publicId: string; externalId: string };
+      };
       user?: TJwtPayload;
     }
   }
