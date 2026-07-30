@@ -31,6 +31,30 @@ enum MessageSender {
   AI
 }
 
+enum ConversationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ConversationEventType {
+  CREATED
+  STATUS_CHANGED
+  PRIORITY_CHANGED
+  ASSIGNED
+  UNASSIGNED
+  LABEL_ADDED
+  LABEL_REMOVED
+  NOTE_ADDED
+}
+
+enum ActorType {
+  AGENT
+  SUPERADMIN
+  SYSTEM
+}
+
 // A company that has embedded the PulseDesk widget.
 model Company {
   id       String @id @default(cuid())
@@ -68,8 +92,9 @@ model Agent {
 
   assignedConversations Conversation[] @relation("AssignedAgent")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  conversationNotes ConversationNote[] @relation("ConversationNoteAuthor")
 
   @@index([companyId])
   @@map("agents")
@@ -119,10 +144,12 @@ model Customer {
 
 // A single chat thread between an anonymous end-customer and a company (AI and/or agent).
 model Conversation {
-  id       String             @id @default(cuid())
-  publicId String             @unique @default(cuid())
-  status   ConversationStatus @default(OPEN)
-  source   ConversationSource @default(AI)
+  id       String               @id @default(cuid())
+  publicId String               @unique @default(cuid())
+  status   ConversationStatus   @default(OPEN)
+  source   ConversationSource   @default(AI)
+  priority ConversationPriority @default(MEDIUM)
+  labels   String[]             @default([])
 
   companyId String
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -134,6 +161,8 @@ model Conversation {
   assignedAgent   Agent?  @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
 
   messages Message[]
+  notes    ConversationNote[]
+  events   ConversationEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -141,7 +170,44 @@ model Conversation {
   @@index([companyId])
   @@index([customerId])
   @@index([assignedAgentId])
+  @@index([companyId, status])
   @@map("conversations")
+}
+
+// New models
+model ConversationNote {
+  id       String @id @default(cuid())
+  publicId String @unique @default(cuid())
+  content  String
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   Agent  @relation("ConversationNoteAuthor", fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([conversationId])
+  @@map("conversation_notes")
+}
+
+model ConversationEvent {
+  id   String                @id @default(cuid())
+  type ConversationEventType
+  meta Json?
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  actorId   String?
+  actorType ActorType?
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId])
+  @@map("conversation_events")
 }
 
 // A single message within a conversation.
