@@ -7,6 +7,7 @@ import { CustomerRoutes } from "../modules/customer/customer.route";
 import { MessageRoutes } from "../modules/message/message.route";
 import { NoteRoutes } from "../modules/note/note.route";
 import { FaqRoutes } from "../modules/faq/faq.route";
+import { DashboardRoutes } from "../modules/dashboard/dashboard.route";
 
 const router = Router();
 
@@ -47,6 +48,7 @@ const moduleRoutes: { path: string; route: Router }[] = [
     path: "/faq",
     route: FaqRoutes,
   },
+  { path: "/dashboard", route: DashboardRoutes },
 ];
 
 moduleRoutes.forEach(({ path, route }) => router.use(path, route));
