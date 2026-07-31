@@ -1,10 +1,11 @@
-import { Server } from "http";
+import http from "http";
 import app from "./app";
 import env from "./config/env";
 import { prisma } from "./lib/prisma";
 import { seed } from "./helpers/seed";
+import { initSocketServer, realtimeEmitter } from "./realtime";
 
-let server: Server;
+let server: http.Server;
 
 async function main() {
   try {
@@ -12,9 +13,13 @@ async function main() {
     // eslint-disable-next-line no-console
     console.log("✅ Database connected");
     await seed();
-    server = app.listen(env.PORT, () => {
-      // eslint-disable-next-line no-console
-      console.log(`🚀 PulseDesk API listening on port ${env.PORT}`);
+    server = http.createServer(app);
+
+    initSocketServer(server);
+    await realtimeEmitter.init(); // subscribes to Redis before accepting traffic
+
+    server.listen(env.PORT, () => {
+      console.log(`PulseDesk API listening on :${env.PORT}`);
     });
   } catch (error) {
     console.log(error);
@@ -29,6 +34,7 @@ const shutdown = async (signal: string) => {
   console.log(`\n${signal} received. Shutting down gracefully...`);
 
   await prisma.$disconnect();
+  await realtimeEmitter.shutdown();
 
   if (server) {
     server.close(() => process.exit(0));

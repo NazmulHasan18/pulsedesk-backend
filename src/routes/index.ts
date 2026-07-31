@@ -8,6 +8,7 @@ import { MessageRoutes } from "../modules/message/message.route";
 import { NoteRoutes } from "../modules/note/note.route";
 import { FaqRoutes } from "../modules/faq/faq.route";
 import { DashboardRoutes } from "../modules/dashboard/dashboard.route";
+import { RealtimeRoutes } from "../modules/realtime/realtime.route";
 
 const router = Router();
 
@@ -49,6 +50,7 @@ const moduleRoutes: { path: string; route: Router }[] = [
     route: FaqRoutes,
   },
   { path: "/dashboard", route: DashboardRoutes },
+  { path: "/realtime", route: RealtimeRoutes },
 ];
 
 moduleRoutes.forEach(({ path, route }) => router.use(path, route));

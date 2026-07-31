@@ -20,6 +20,7 @@ const env = {
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET as string,
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || "30d",
   CLIENT_URL: process.env.CLIENT_URL || "http://localhost:3000",
+  REDIS_URL: process.env.REDIS_URL || "redis://localhost:6379",
 };
 
 export default env;
