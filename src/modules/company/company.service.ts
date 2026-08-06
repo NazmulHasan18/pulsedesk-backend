@@ -1,30 +1,53 @@
-import httpStatus from 'http-status';
-import { Prisma } from '@prisma/client';
-import { prisma } from '../../lib/prisma';
-import AppError from '../../utils/AppError';
-import generateSiteId from '../../utils/generateSiteId';
-import { TCompanyListQuery, TCompanySettingsPayload, TCreateCompanyPayload, TUpdateCompanyPayload } from './company.interface';
+import httpStatus from "http-status";
+import { CompanyPlan, Prisma } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
+import AppError from "../../utils/AppError";
+import generateSiteId from "../../utils/generateSiteId";
+import {
+  TCompanyListQuery,
+  TCompanySettingsPayload,
+  TCreateCompanyPayload,
+  TUpdateCompanyPayload,
+} from "./company.interface";
 
-const buildCompanyWhere = (search?: string): Prisma.CompanyWhereInput => {
-  if (!search) {
-    return {};
+const buildCompanyWhere = (search?: string, plan?: CompanyPlan): Prisma.CompanyWhereInput => {
+  const where: Prisma.CompanyWhereInput = {};
+
+  if (search) {
+    where.OR = [
+      {
+        name: {
+          contains: search,
+          mode: Prisma.QueryMode.insensitive,
+        },
+      },
+      {
+        siteId: {
+          contains: search,
+          mode: Prisma.QueryMode.insensitive,
+        },
+      },
+      {
+        publicId: {
+          contains: search,
+          mode: Prisma.QueryMode.insensitive,
+        },
+      },
+    ];
   }
 
-  return {
-    OR: [
-      { name: { contains: search, mode: 'insensitive' } },
-      { siteId: { contains: search, mode: 'insensitive' } },
-      { plan: { contains: search, mode: 'insensitive' } },
-      { publicId: { contains: search, mode: 'insensitive' } },
-    ],
-  };
+  if (plan) {
+    where.plan = plan;
+  }
+
+  return where;
 };
 
 const formatCompany = (company: {
   publicId: string;
   name: string;
   siteId: string;
-  plan: string;
+  plan: CompanyPlan | null;
   settings: Prisma.JsonValue | null;
   createdAt: Date;
   updatedAt: Date;
@@ -51,21 +74,6 @@ const ensureUniqueSiteId = async () => {
   return siteId;
 };
 
-const createCompany = async (payload: TCreateCompanyPayload) => {
-  const siteId = await ensureUniqueSiteId();
-
-  const company = await prisma.company.create({
-    data: {
-      name: payload.name,
-      plan: payload.plan ?? 'free',
-      settings: payload.settings,
-      siteId,
-    },
-  });
-
-  return formatCompany(company);
-};
-
 const listCompanies = async (query: TCompanyListQuery) => {
   const page = query.page ?? 1;
   const limit = query.limit ?? 10;
@@ -77,8 +85,8 @@ const listCompanies = async (query: TCompanyListQuery) => {
     prisma.company.findMany({
       where,
       skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
+      take: Number(limit),
+      orderBy: { createdAt: "desc" },
       include: {
         _count: {
           select: {
@@ -117,7 +125,7 @@ const getCompanyByPublicId = async (publicId: string) => {
   });
 
   if (!company) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Company not found');
+    throw new AppError(httpStatus.NOT_FOUND, "Company not found");
   }
 
   return {
@@ -130,7 +138,7 @@ const updateCompany = async (publicId: string, payload: TUpdateCompanyPayload) =
   const company = await prisma.company.findUnique({ where: { publicId } });
 
   if (!company) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Company not found');
+    throw new AppError(httpStatus.NOT_FOUND, "Company not found");
   }
 
   const updated = await prisma.company.update({
@@ -153,7 +161,7 @@ const deleteCompany = async (publicId: string) => {
   const company = await prisma.company.findUnique({ where: { publicId } });
 
   if (!company) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Company not found');
+    throw new AppError(httpStatus.NOT_FOUND, "Company not found");
   }
 
   await prisma.company.delete({ where: { publicId } });
@@ -167,15 +175,25 @@ const buildStats = async (companyId: string) => {
     select: { id: true },
   });
 
-  const [totalAgents, activeAgents, inactiveAgents, totalCustomers, totalConversations, openConversations, pendingConversations, closedConversations, totalFaqDocs] = await Promise.all([
+  const [
+    totalAgents,
+    activeAgents,
+    inactiveAgents,
+    totalCustomers,
+    totalConversations,
+    openConversations,
+    pendingConversations,
+    closedConversations,
+    totalFaqDocs,
+  ] = await Promise.all([
     prisma.agent.count({ where: { companyId } }),
     prisma.agent.count({ where: { companyId, isActive: true } }),
     prisma.agent.count({ where: { companyId, isActive: false } }),
     prisma.customer.count({ where: { companyId } }),
     prisma.conversation.count({ where: { companyId } }),
-    prisma.conversation.count({ where: { companyId, status: 'OPEN' } }),
-    prisma.conversation.count({ where: { companyId, status: 'PENDING' } }),
-    prisma.conversation.count({ where: { companyId, status: 'CLOSED' } }),
+    prisma.conversation.count({ where: { companyId, status: "OPEN" } }),
+    prisma.conversation.count({ where: { companyId, status: "PENDING" } }),
+    prisma.conversation.count({ where: { companyId, status: "CLOSED" } }),
     prisma.faqDoc.count({ where: { companyId } }),
   ]);
 
@@ -214,7 +232,7 @@ const getCompanyStatsByPublicId = async (publicId: string) => {
   });
 
   if (!company) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Company not found');
+    throw new AppError(httpStatus.NOT_FOUND, "Company not found");
   }
 
   const stats = await buildStats(company.id);
@@ -247,7 +265,7 @@ const getMyCompany = async (companyId: string) => {
   });
 
   if (!company) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Company not found');
+    throw new AppError(httpStatus.NOT_FOUND, "Company not found");
   }
 
   return {
@@ -260,7 +278,7 @@ const updateMyCompany = async (companyId: string, payload: TUpdateCompanyPayload
   const company = await prisma.company.findUnique({ where: { id: companyId } });
 
   if (!company) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Company not found');
+    throw new AppError(httpStatus.NOT_FOUND, "Company not found");
   }
 
   const updated = await prisma.company.update({
@@ -286,7 +304,7 @@ const getMyCompanyStats = async (companyId: string) => {
   });
 
   if (!company) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Company not found');
+    throw new AppError(httpStatus.NOT_FOUND, "Company not found");
   }
 
   const stats = await buildStats(company.id);
@@ -304,7 +322,6 @@ const getMyCompanyStats = async (companyId: string) => {
 };
 
 export const CompanyService = {
-  createCompany,
   listCompanies,
   getCompanyByPublicId,
   updateCompany,

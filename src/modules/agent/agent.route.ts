@@ -8,35 +8,35 @@ const router = Router();
 
 router.post(
   "/",
-  auth(Permission.agent, Permission.agentAdmin),
+  auth(Permission.agentAdmin),
   validateRequest(AgentValidation.createAgentSchema),
   AgentController.createAgent,
 );
 
 router.post(
   "/invite",
-  auth(Permission.agent, Permission.agentAdmin),
+  auth(Permission.agentAdmin),
   validateRequest(AgentValidation.inviteAgentSchema),
   AgentController.inviteAgent,
 );
 
 router.get(
   "/",
-  auth(Permission.agent, Permission.agentAdmin),
+  auth(Permission.agentAdmin),
   validateRequest(AgentValidation.listAgentsSchema),
   AgentController.listAgents,
 );
 
 router.get(
   "/:agentId",
-  auth(Permission.agent, Permission.agentAdmin),
+  auth(Permission.agentAdmin),
   validateRequest(AgentValidation.agentIdParamsSchema),
   AgentController.getAgent,
 );
 
 router.patch(
   "/:agentId",
-  auth(Permission.agent, Permission.agentAdmin),
+  auth(Permission.agentAdmin),
   validateRequest(AgentValidation.agentIdParamsSchema),
   validateRequest(AgentValidation.updateAgentSchema),
   AgentController.updateAgent,
@@ -44,14 +44,14 @@ router.patch(
 
 router.delete(
   "/:agentId",
-  auth(Permission.agent, Permission.agentAdmin),
+  auth(Permission.agentAdmin),
   validateRequest(AgentValidation.agentIdParamsSchema),
   AgentController.deleteAgent,
 );
 
 router.patch(
   "/:agentId/status",
-  auth(Permission.agent, Permission.agentAdmin),
+  auth(Permission.agentAdmin),
   validateRequest(AgentValidation.agentIdParamsSchema),
   validateRequest(AgentValidation.agentStatusSchema),
   AgentController.setAgentStatus,
@@ -59,7 +59,7 @@ router.patch(
 
 router.post(
   "/:agentId/reset-password",
-  auth(Permission.agent, Permission.agentAdmin),
+  auth(Permission.agentAdmin),
   validateRequest(AgentValidation.agentIdParamsSchema),
   AgentController.resetPassword,
 );

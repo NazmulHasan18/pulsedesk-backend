@@ -55,13 +55,21 @@ enum ActorType {
   SYSTEM
 }
 
+enum CompanyPlan {
+  FREE
+  STARTER
+  GROWTH
+  ENTERPRISE
+}
+
 // A company that has embedded the PulseDesk widget.
 model Company {
-  id       String @id @default(cuid())
-  publicId String @unique @default(cuid())
+  id       String       @id @default(cuid())
+  publicId String       @unique @default(cuid())
   name     String
-  siteId   String @unique // used in the embed script: data-site-id
-  plan     String @default("free")
+  siteId   String       @unique // used in the embed script: data-site-id
+  email    String       @unique
+  plan     CompanyPlan? @default(FREE)
   settings Json?
 
   agents        Agent[]

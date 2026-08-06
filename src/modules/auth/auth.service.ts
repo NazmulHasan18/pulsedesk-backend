@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import httpStatus from "http-status";
-import { Prisma } from "@prisma/client";
+import { CompanyPlan, Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import env from "../../config/env";
 import AppError from "../../utils/AppError";
@@ -42,6 +42,9 @@ const registerCompany = async (payload: TRegisterCompanyPayload) => {
       data: {
         name: payload.companyName,
         siteId,
+        plan: payload.plan ?? CompanyPlan.FREE,
+        settings: payload.settings ?? {},
+        email: payload.email,
       },
     });
 

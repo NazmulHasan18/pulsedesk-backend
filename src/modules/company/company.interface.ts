@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { CompanyPlan, Prisma } from "@prisma/client";
 
 export type TCreateCompanyPayload = {
   name: string;
@@ -8,7 +8,7 @@ export type TCreateCompanyPayload = {
 
 export type TUpdateCompanyPayload = {
   name?: string;
-  plan?: string;
+  plan?: CompanyPlan;
   settings?: Prisma.InputJsonValue;
 };
 
