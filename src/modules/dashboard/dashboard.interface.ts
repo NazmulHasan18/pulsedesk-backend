@@ -1,4 +1,4 @@
-import { ConversationPriority, ConversationSource, ConversationStatus } from '@prisma/client';
+import { CompanyPlan, ConversationPriority, ConversationSource, ConversationStatus } from "@prisma/client";
 
 export type StatusCounts = Record<ConversationStatus, number>;
 export type SourceCounts = Record<ConversationSource, number>;
@@ -59,7 +59,7 @@ export interface PlatformCompanyBreakdown {
   companyId: string;
   publicId: string;
   name: string;
-  plan: string;
+  plan: CompanyPlan | null;
   agents: number;
   customers: number;
   conversations: number;
