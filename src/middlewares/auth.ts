@@ -29,7 +29,7 @@ const auth = (...permissions: Permission[]) => {
   return catchAsync(async (req: Request, _res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
     const token = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : undefined;
-    console.log(permissions);
+
     if (!token) {
       throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized!");
     }
@@ -54,7 +54,7 @@ const auth = (...permissions: Permission[]) => {
 
         if (permissionValue.startsWith("agent:") && decoded.userType === "agent") {
           const role = permissionValue.split(":")[1];
-          console.log(decoded.role, role);
+
           if (decoded.role === role) {
             authorized = true;
             break;
@@ -63,7 +63,6 @@ const auth = (...permissions: Permission[]) => {
       }
 
       if (!authorized) {
-        console.log(decoded);
         throw new AppError(httpStatus.FORBIDDEN, "Forbidden access!");
       }
     }
