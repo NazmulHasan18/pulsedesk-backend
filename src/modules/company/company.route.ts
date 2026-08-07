@@ -20,6 +20,8 @@ router.get(
   CompanyController.listCompanies,
 );
 
+router.get("/me/stats", auth(Permission.agentAdmin), CompanyController.getMyCompanyStats);
+
 router.get(
   "/:companyId/stats",
   auth(Permission.superadmin),
@@ -49,22 +51,20 @@ router.delete(
   CompanyController.deleteCompany,
 );
 
-router.get("/me/profile", auth(Permission.agent, Permission.agentAdmin), CompanyController.getMyCompany);
+router.get("/me/profile", auth(Permission.agentAdmin), CompanyController.getMyCompany);
 
 router.patch(
   "/me/profile",
-  auth(Permission.agent, Permission.agentAdmin),
+  auth(Permission.agentAdmin),
   validateRequest(CompanyValidation.updateCompanySchema),
   CompanyController.updateMyCompany,
 );
 
 router.patch(
   "/me/settings",
-  auth(Permission.agent, Permission.agentAdmin),
+  auth(Permission.agentAdmin),
   validateRequest(CompanyValidation.updateCompanySettingsSchema),
   CompanyController.updateMyCompanySettings,
 );
-
-router.get("/me/stats", auth(Permission.agent, Permission.agentAdmin), CompanyController.getMyCompanyStats);
 
 export const CompanyRoutes = router;
