@@ -18,7 +18,7 @@ async function main() {
     initSocketServer(server);
     await realtimeEmitter.init(); // subscribes to Redis before accepting traffic
 
-    server.listen(env.PORT, () => {
+    server.listen(Number(env.PORT), "0.0.0.0", () => {
       console.log(`PulseDesk API listening on :${env.PORT}`);
     });
   } catch (error) {
