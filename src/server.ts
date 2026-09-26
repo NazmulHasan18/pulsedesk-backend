@@ -1,11 +1,15 @@
 import http from "http";
 import app from "./app.js";
-import env from "./config/env.js";
 import { prisma } from "./lib/prisma.js";
 import { seed } from "./helpers/seed.js";
 import { initSocketServer, realtimeEmitter } from "./realtime/index.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 let server: http.Server;
+
+const PORT = Number(process.env.PORT) || 5000;
 
 async function main() {
   try {
@@ -18,8 +22,8 @@ async function main() {
     initSocketServer(server);
     await realtimeEmitter.init(); // subscribes to Redis before accepting traffic
 
-    server.listen(Number(env.PORT), "0.0.0.0", () => {
-      console.log(`PulseDesk API listening on :${env.PORT}`);
+    server.listen(Number(PORT), () => {
+      console.log(`PulseDesk API listening on :${PORT}`);
     });
   } catch (error) {
     console.log(error);
