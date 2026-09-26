@@ -3,9 +3,6 @@ import app from "./app.js";
 import { prisma } from "./lib/prisma.js";
 import { seed } from "./helpers/seed.js";
 import { initSocketServer, realtimeEmitter } from "./realtime/index.js";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 let server: http.Server;
 
