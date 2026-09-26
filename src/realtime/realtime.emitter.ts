@@ -1,11 +1,11 @@
 // src/realtime/realtime.emitter.ts
 
-import { randomUUID } from 'crypto';
-import { getSocketServer } from './socket.server';
-import { sseManager } from './sse.manager';
-import { RedisPubSubAdapter } from './pubsub.adapter';
-import { rooms } from './realtime.constants';
-import { RealtimeEventName, RealtimeMessage } from './realtime.interface';
+import { randomUUID } from "crypto";
+import { getSocketServer } from "./socket.server.js";
+import { sseManager } from "./sse.manager.js";
+import { RedisPubSubAdapter } from "./pubsub.adapter.js";
+import { rooms } from "./realtime.constants.js";
+import { RealtimeEventName, RealtimeMessage } from "./realtime.interface.js";
 
 const INSTANCE_ID = randomUUID();
 

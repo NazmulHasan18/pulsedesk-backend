@@ -1,9 +1,9 @@
 import { Router } from "express";
-import auth, { Permission } from "../../middlewares/auth";
-import { widgetAuth } from "../../middlewares/widgetAuth";
-import validateRequest from "../../middlewares/validateRequest";
-import { MessageValidation } from "./message.validation";
-import { MessageController } from "./message.controller";
+import auth, { Permission } from "../../middlewares/auth.js";
+import { widgetAuth } from "../../middlewares/widgetAuth.js";
+import validateRequest from "../../middlewares/validateRequest.js";
+import { MessageValidation } from "./message.validation.js";
+import { MessageController } from "./message.controller.js";
 
 // Agent/Admin dashboard side — mounted under an authenticated /conversations/:conversationId/messages
 const agentRouter = Router({ mergeParams: true });

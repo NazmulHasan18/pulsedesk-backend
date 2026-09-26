@@ -1,9 +1,9 @@
-import AppError from "../../utils/AppError";
+import AppError from "../../utils/AppError.js";
 // NOTE: adjust this import to wherever your shared Prisma client instance lives
 // (e.g. '../../lib/prisma' or '../../shared/prisma') — swap in your existing
 // singleton instead of instantiating a new PrismaClient here.
-import { prisma } from "../../lib/prisma";
-import { ICreateFaqDocPayload, IFaqSearchQuery, IUpdateFaqDocPayload } from "./faq.interface";
+import { prisma } from "../../lib/prisma.js";
+import { ICreateFaqDocPayload, IFaqSearchQuery, IUpdateFaqDocPayload } from "./faq.interface.js";
 
 // ---------------------------------------------------------------------------
 // Embeddings placeholder

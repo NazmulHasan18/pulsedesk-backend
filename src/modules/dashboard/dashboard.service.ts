@@ -9,8 +9,8 @@ import {
   PriorityCounts,
   SourceCounts,
   StatusCounts,
-} from "./dashboard.interface";
-import { prisma } from "../../lib/prisma";
+} from "./dashboard.interface.js";
+import { prisma } from "../../lib/prisma.js";
 
 // ---------- helpers: zero-fill enum-keyed count maps ----------
 

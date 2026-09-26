@@ -2,6 +2,7 @@
   "name": "pulsedesk-backend",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "PulseDesk backend — Express + Prisma + PostgreSQL + TypeScript",
   "packageManager": "pnpm@12.3.4",
   "main": "dist/server.js",
@@ -10,6 +11,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
+    "prisma:seed": "tsx src/helpers/seed.ts",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
@@ -47,6 +49,6 @@
     "typescript": "^7.0.2"
   },
   "prisma": {
-    "seed": "ts-node --transpile-only prisma/seed.ts"
+    "seed": "pnpm run prisma:seed"
   }
 }

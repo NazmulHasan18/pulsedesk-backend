@@ -1,10 +1,10 @@
 // src/modules/realtime/realtime.controller.ts
 
 import { Response } from "express";
-import catchAsync from "../../utils/catchAsync";
-import AppError from "../../utils/AppError";
-import { sseManager, rooms } from "../../realtime";
-import { prisma } from "../../lib/prisma";
+import catchAsync from "../../utils/catchAsync.js";
+import AppError from "../../utils/AppError.js";
+import { sseManager, rooms } from "../../realtime/index.js";
+import { prisma } from "../../lib/prisma.js";
 
 // Agents/Admins - already authenticated via the `auth()` middleware, which
 // is expected to populate req.user with { id, companyId, role, ... }.

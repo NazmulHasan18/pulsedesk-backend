@@ -1,14 +1,14 @@
 import httpStatus from "http-status";
 import { CompanyPlan, Prisma } from "@prisma/client";
-import { prisma } from "../../lib/prisma";
-import AppError from "../../utils/AppError";
-import generateSiteId from "../../utils/generateSiteId";
+import { prisma } from "../../lib/prisma.js";
+import AppError from "../../utils/AppError.js";
+import generateSiteId from "../../utils/generateSiteId.js";
 import {
   TCompanyListQuery,
   TCompanySettingsPayload,
   TCreateCompanyPayload,
   TUpdateCompanyPayload,
-} from "./company.interface";
+} from "./company.interface.js";
 
 const buildCompanyWhere = (search?: string, plan?: CompanyPlan): Prisma.CompanyWhereInput => {
   const where: Prisma.CompanyWhereInput = {};

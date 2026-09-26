@@ -1,12 +1,12 @@
 import bcrypt from "bcrypt";
 import httpStatus from "http-status";
 import { CompanyPlan, Prisma } from "@prisma/client";
-import { prisma } from "../../lib/prisma";
-import env from "../../config/env";
-import AppError from "../../utils/AppError";
-import generateSiteId from "../../utils/generateSiteId";
-import { signToken, verifyToken, TJwtPayload } from "../../utils/jwt";
-import { TChangePasswordPayload, TLoginPayload, TRegisterCompanyPayload } from "./auth.interface";
+import { prisma } from "../../lib/prisma.js";
+import env from "../../config/env.js";
+import AppError from "../../utils/AppError.js";
+import generateSiteId from "../../utils/generateSiteId.js";
+import { signToken, verifyToken, TJwtPayload } from "../../utils/jwt.js";
+import { TChangePasswordPayload, TLoginPayload, TRegisterCompanyPayload } from "./auth.interface.js";
 
 const createTokenPair = (payload: TJwtPayload) => {
   const accessToken = signToken(payload, env.JWT_ACCESS_SECRET, env.JWT_ACCESS_EXPIRES_IN);

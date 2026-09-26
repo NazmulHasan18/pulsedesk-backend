@@ -1,8 +1,8 @@
 import { Router } from "express";
-import auth, { Permission } from "../../middlewares/auth";
-import validateRequest from "../../middlewares/validateRequest";
-import { ConversationController } from "./conversation.controller";
-import { ConversationValidation } from "./conversation.validation";
+import auth, { Permission } from "../../middlewares/auth.js";
+import validateRequest from "../../middlewares/validateRequest.js";
+import { ConversationController } from "./conversation.controller.js";
+import { ConversationValidation } from "./conversation.validation.js";
 
 const router = Router();
 

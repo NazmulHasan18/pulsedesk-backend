@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
-import { FaqService } from "./faq.service";
-import AppError from "../../utils/AppError";
+import catchAsync from "../../utils/catchAsync.js";
+import sendResponse from "../../utils/sendResponse.js";
+import { FaqService } from "./faq.service.js";
+import AppError from "../../utils/AppError.js";
 
 // NOTE: assumes your auth middleware already augments `req.user` with at
 // least `{ companyId: string; role: 'ADMIN' | 'AGENT' }` for company-scoped

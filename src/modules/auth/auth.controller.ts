@@ -1,8 +1,8 @@
-import httpStatus from 'http-status';
-import catchAsync from '../../utils/catchAsync';
-import sendResponse from '../../utils/sendResponse';
-import AppError from '../../utils/AppError';
-import { AuthService } from './auth.service';
+import httpStatus from "http-status";
+import catchAsync from "../../utils/catchAsync.js";
+import sendResponse from "../../utils/sendResponse.js";
+import AppError from "../../utils/AppError.js";
+import { AuthService } from "./auth.service.js";
 
 const registerCompany = catchAsync(async (req, res) => {
   const result = await AuthService.registerCompany(req.body);
@@ -10,7 +10,7 @@ const registerCompany = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: 'Company registered successfully',
+    message: "Company registered successfully",
     data: result,
   });
 });
@@ -21,7 +21,7 @@ const login = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Logged in successfully',
+    message: "Logged in successfully",
     data: result,
   });
 });
@@ -32,7 +32,7 @@ const superAdminLogin = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Logged in successfully',
+    message: "Logged in successfully",
     data: result,
   });
 });
@@ -44,14 +44,14 @@ const refreshToken = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Access token refreshed successfully',
+    message: "Access token refreshed successfully",
     data: result,
   });
 });
 
 const changePassword = catchAsync(async (req, res) => {
   if (!req.user) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized!");
   }
 
   await AuthService.changePassword(req.user, req.body);
@@ -59,13 +59,13 @@ const changePassword = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Password changed successfully',
+    message: "Password changed successfully",
   });
 });
 
 const logout = catchAsync(async (req, res) => {
   if (!req.user) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized!");
   }
 
   await AuthService.logout(req.user);
@@ -73,13 +73,13 @@ const logout = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Logged out successfully',
+    message: "Logged out successfully",
   });
 });
 
 const getMe = catchAsync(async (req, res) => {
   if (!req.user) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized!");
   }
 
   const result = await AuthService.getMe(req.user);
@@ -87,7 +87,7 @@ const getMe = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Profile retrieved successfully',
+    message: "Profile retrieved successfully",
     data: result,
   });
 });

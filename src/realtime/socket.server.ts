@@ -3,14 +3,14 @@
 import type { Server as HttpServer } from "http";
 import { Server as IOServer, Socket } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { createRedisClient } from "./redis.client";
-import { rooms } from "./realtime.constants";
-import { RealtimeIdentity } from "./realtime.interface";
+import { createRedisClient } from "./redis.client.js";
+import { rooms } from "./realtime.constants.js";
+import { RealtimeIdentity } from "./realtime.interface.js";
 
 // ---- Adjust these two imports to match your actual module paths ----
-import { verifyToken } from "../utils/jwt"; // expected: (token: string) => { id, role, companyId?, tokenVersion }
-import env from "../config/env";
-import { prisma } from "../lib/prisma";
+import { verifyToken } from "../utils/jwt.js"; // expected: (token: string) => { id, role, companyId?, tokenVersion }
+import env from "../config/env.js";
+import { prisma } from "../lib/prisma.js";
 // ----------------------------------------------------------------------
 
 declare module "socket.io" {

@@ -1,8 +1,8 @@
 import express from "express";
-import auth, { Permission } from "../../middlewares/auth";
-import validateRequest from "../../middlewares/validateRequest";
-import { DashboardController } from "./dashboard.controller";
-import { DashboardValidation } from "./dashboard.validation";
+import auth, { Permission } from "../../middlewares/auth.js";
+import validateRequest from "../../middlewares/validateRequest.js";
+import { DashboardController } from "./dashboard.controller.js";
+import { DashboardValidation } from "./dashboard.validation.js";
 
 const router = express.Router();
 

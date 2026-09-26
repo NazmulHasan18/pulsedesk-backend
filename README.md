@@ -1,10 +1,46 @@
-# PulseDesk — Backend
+# PulseDesk backend
 
-Status: **basic project setup + full Prisma schema + Auth module only.**
-No conversation/message/faq-doc CRUD, no realtime layer, no RAG yet — see
-`HANDOFF.md` in the landing-page repo for the full product roadmap.
+Express/TypeScript API with Prisma/PostgreSQL persistence and Socket.IO/Redis
+realtime scaffolding. The repository currently contains auth, company, agent,
+customer, conversation, message, FAQ, dashboard, note, and realtime modules.
+Some public widget authentication and realtime paths are still being completed;
+the mock widget must not be treated as a production integration.
 
 ---
+
+## Local setup
+
+From the repository root, copy `pulsedesk-backend/.env.example` to
+`pulsedesk-backend/.env`, then start dependencies:
+
+```bash
+docker compose up -d postgres redis
+cd pulsedesk-backend
+pnpm install
+pnpm prisma:generate
+pnpm prisma:deploy
+pnpm prisma:seed
+pnpm dev                         # http://localhost:5000
+```
+
+For a new development database, `pnpm prisma:migrate --name init` may be used
+instead of `prisma:deploy`. The seed is idempotent for the configured
+super-admin email; running it again reports that the account already exists.
+Never commit `.env` or real secrets.
+
+## Commands
+
+`pnpm build` compiles TypeScript, `pnpm lint` runs ESLint, `pnpm start` serves
+the compiled API, and `pnpm prisma:studio` opens Prisma Studio. The migration
+history in `prisma/migrations` is the source of truth for an empty database;
+do not edit old migrations.
+
+## Configuration
+
+See `.env.example` for database, JWT, Redis, public-origin/CORS, and optional AI
+provider variables. `CLIENT_URL` is the current CORS origin used by the API;
+the additional public-origin variables document the intended deployment
+contract for upcoming widget/AI work.
 
 ## 1. Stack
 
@@ -79,15 +115,15 @@ is wired up (see item 4 in the landing page's `HANDOFF.md`).
 
 Three identity types, matching the landing page's user types:
 
-| Endpoint | Auth required | Purpose |
-|---|---|---|
-| `POST /api/v1/auth/register-company` | none | Creates a `Company` + its first `Agent` (role `ADMIN`) in one transaction. This is company sign-up. |
-| `POST /api/v1/auth/login` | none | Agent/admin login by email + password. |
-| `POST /api/v1/auth/super-admin/login` | none | Super-admin login. Super-admins are **seeded**, not self-registered (see `prisma/seed.ts`). |
-| `POST /api/v1/auth/refresh-token` | none (refresh token in body) | Issues a new access token. |
-| `POST /api/v1/auth/change-password` | any authenticated user | Bumps `tokenVersion`, invalidating all previously issued tokens. |
-| `POST /api/v1/auth/logout` | any authenticated user | Bumps `tokenVersion` (logout-everywhere). |
-| `GET /api/v1/auth/me` | any authenticated user | Returns the current agent (+ company) or super-admin profile. |
+| Endpoint                              | Auth required                | Purpose                                                                                             |
+| ------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------- |
+| `POST /api/v1/auth/register-company`  | none                         | Creates a `Company` + its first `Agent` (role `ADMIN`) in one transaction. This is company sign-up. |
+| `POST /api/v1/auth/login`             | none                         | Agent/admin login by email + password.                                                              |
+| `POST /api/v1/auth/super-admin/login` | none                         | Super-admin login. Super-admins are **seeded**, not self-registered (see `prisma/seed.ts`).         |
+| `POST /api/v1/auth/refresh-token`     | none (refresh token in body) | Issues a new access token.                                                                          |
+| `POST /api/v1/auth/change-password`   | any authenticated user       | Bumps `tokenVersion`, invalidating all previously issued tokens.                                    |
+| `POST /api/v1/auth/logout`            | any authenticated user       | Bumps `tokenVersion` (logout-everywhere).                                                           |
+| `GET /api/v1/auth/me`                 | any authenticated user       | Returns the current agent (+ company) or super-admin profile.                                       |
 
 **Token model:** every JWT carries `{ id (publicId), userType, role?,
 companyId?, tokenVersion }`. The `auth()` middleware re-checks
@@ -96,9 +132,8 @@ companyId?, tokenVersion }`. The `auth()` middleware re-checks
 expiry. Use `auth('agent')`, `auth('agent', 'ADMIN')`, or
 `auth('superadmin')` on any future route to restrict by user type/role.
 
-Not yet built: agent invite flow (an admin adding more agents to their
-company), email verification, password reset via email, rate limiting on
-login.
+Remaining auth-adjacent work includes email verification, password reset via
+email, and rate limiting on login; agent management routes already exist.
 
 ---
 
@@ -130,7 +165,7 @@ the landing page's `HANDOFF.md`). This is **not a bug in the code**.
 
 Verification performed instead: `npm install` succeeded cleanly, and
 `npx tsc --noEmit` was run to type-check everything. The only errors
-surfaced were the expected ones caused by the *absence* of the
+surfaced were the expected ones caused by the _absence_ of the
 Prisma-generated types (e.g. `Prisma.PrismaClientKnownRequestError` doesn't
 exist until `generate` runs) — nothing else. In any environment with normal
 internet access, run:
@@ -158,3 +193,14 @@ npx tsc --noEmit    # should now be fully clean
    search, wired to Groq for generation.
 6. **Super-admin module** — company list, AI-vs-agent usage stats,
    suspend/manage companies.
+
+### Using Docker
+
+```
+cd ~/Personal-Project/pulsedesk
+
+docker compose up -d --build postgres redis backend
+
+docker compose exec backend pnpm prisma:deploy
+docker compose exec backend pnpm prisma:seed
+```

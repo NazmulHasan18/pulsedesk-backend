@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import env from "../config/env.js";
 import { prisma } from "../lib/prisma.js";
@@ -25,4 +24,13 @@ export async function seed() {
 
   console.log(`✅ Super-admin seeded: ${email} (password: ${password})`);
   console.log("⚠️  Change this password immediately in a real environment.");
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  seed()
+    .catch((error) => {
+      console.error("Seed failed:", error);
+      process.exitCode = 1;
+    })
+    .finally(() => prisma.$disconnect());
 }

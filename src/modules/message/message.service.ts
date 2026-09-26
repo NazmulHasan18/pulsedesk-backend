@@ -1,7 +1,7 @@
-import AppError from "../../utils/AppError";
+import AppError from "../../utils/AppError.js";
 import { ConversationStatus, MessageSender, Prisma } from "@prisma/client";
-import { IListMessagesQuery, ISendMessagePayload } from "./message.interface";
-import { prisma } from "../../lib/prisma";
+import { IListMessagesQuery, ISendMessagePayload } from "./message.interface.js";
+import { prisma } from "../../lib/prisma.js";
 
 const getConversationOrThrow = async (companyId: string, conversationId: string) => {
   const conversation = await prisma.conversation.findFirst({

@@ -1,7 +1,7 @@
 // src/realtime/redis.client.ts
 
-import Redis, { RedisOptions } from "ioredis";
-import env from "../config/env";
+import { Redis, RedisOptions } from "ioredis";
+import env from "../config/env.js";
 
 const REDIS_URL = env.REDIS_URL || "redis://localhost:6379";
 

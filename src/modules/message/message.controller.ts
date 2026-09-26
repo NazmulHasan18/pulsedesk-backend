@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
-import { MessageService } from "./message.service";
-import AppError from "../../utils/AppError";
+import catchAsync from "../../utils/catchAsync.js";
+import sendResponse from "../../utils/sendResponse.js";
+import { MessageService } from "./message.service.js";
+import AppError from "../../utils/AppError.js";
 
 const sendAgentMessage = catchAsync(async (req: Request, res: Response) => {
   const { conversationId } = req.params;

@@ -1,8 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import httpStatus from "http-status";
-import catchAsync from "../utils/catchAsync";
-import AppError from "../utils/AppError";
-import { prisma } from "../lib/prisma";
+import catchAsync from "../utils/catchAsync.js";
 
 // Widget sends its public embed key on every request, either as a header
 // (preferred, since it doesn't get logged in URLs) or a query param fallback

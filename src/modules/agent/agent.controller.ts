@@ -1,8 +1,8 @@
 import httpStatus from "http-status";
-import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
-import AppError from "../../utils/AppError";
-import { AgentService } from "./agent.service";
+import catchAsync from "../../utils/catchAsync.js";
+import sendResponse from "../../utils/sendResponse.js";
+import AppError from "../../utils/AppError.js";
+import { AgentService } from "./agent.service.js";
 
 const createAgent = catchAsync(async (req, res) => {
   if (!req.user?.companyId) {

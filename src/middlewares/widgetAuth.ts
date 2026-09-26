@@ -1,8 +1,8 @@
-import { prisma } from "../lib/prisma";
-import env from "../config/env";
-import AppError from "../utils/AppError";
-import catchAsync from "../utils/catchAsync";
-import { verifyToken } from "../utils/jwt";
+import { prisma } from "../lib/prisma.js";
+import env from "../config/env.js";
+import AppError from "../utils/AppError.js";
+import catchAsync from "../utils/catchAsync.js";
+import { verifyToken } from "../utils/jwt.js";
 
 type WidgetSessionClaims = {
   companyId?: string;

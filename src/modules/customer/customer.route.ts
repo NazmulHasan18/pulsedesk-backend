@@ -1,9 +1,9 @@
 import express from "express";
-import auth, { Permission } from "../../middlewares/auth";
-import validateRequest from "../../middlewares/validateRequest";
-import { CustomerValidation } from "./customer.validation";
-import { CustomerController } from "./customer.controller";
-import identifyCompanyFromWidgetKey from "../../middlewares/identifycompanyfromwidgetkey";
+import auth, { Permission } from "../../middlewares/auth.js";
+import validateRequest from "../../middlewares/validateRequest.js";
+import { CustomerValidation } from "./customer.validation.js";
+import { CustomerController } from "./customer.controller.js";
+import identifyCompanyFromWidgetKey from "../../middlewares/identifycompanyfromwidgetkey.js";
 
 const router = express.Router();
 

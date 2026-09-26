@@ -1,6 +1,6 @@
-import { prisma } from "../../lib/prisma"; // adjust to your actual prisma client path
-import AppError from "../../utils/AppError";
-import { IActor, IConversationFilters } from "./conversation.interface";
+import { prisma } from "../../lib/prisma.js"; // adjust to your actual prisma client path
+import AppError from "../../utils/AppError.js";
+import { IActor, IConversationFilters } from "./conversation.interface.js";
 import { ConversationStatus, ConversationPriority, ConversationSource, Prisma } from "@prisma/client";
 
 const conversationInclude = {

@@ -1,8 +1,8 @@
 // src/realtime/sse.manager.ts
 
-import type { Response } from 'express';
-import { rooms } from './realtime.constants';
-import { RealtimeMessage } from './realtime.interface';
+import type { Response } from "express";
+import { rooms } from "./realtime.constants.js";
+import { RealtimeMessage } from "./realtime.interface.js";
 
 interface SSEClient {
   id: string;
@@ -19,19 +19,19 @@ class SSEManager {
 
   addClient(id: string, companyId: string, res: Response, initialRooms: string[] = []): void {
     res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-      'X-Accel-Buffering': 'no', // avoid nginx buffering the stream
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no", // avoid nginx buffering the stream
     });
-    res.write('\n');
+    res.write("\n");
 
-    const heartbeat = setInterval(() => res.write(': heartbeat\n\n'), 25_000);
+    const heartbeat = setInterval(() => res.write(": heartbeat\n\n"), 25_000);
 
     const client: SSEClient = { id, companyId, rooms: new Set(initialRooms), res };
     this.clients.set(id, client);
 
-    res.on('close', () => {
+    res.on("close", () => {
       clearInterval(heartbeat);
       this.clients.delete(id);
     });

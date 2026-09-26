@@ -1,17 +1,17 @@
 import bcrypt from "bcrypt";
 import httpStatus from "http-status";
 import { Prisma } from "@prisma/client";
-import { prisma } from "../../lib/prisma";
-import AppError from "../../utils/AppError";
-import env from "../../config/env";
-import generateTemporaryPassword from "../../utils/generateTemporaryPassword";
+import { prisma } from "../../lib/prisma.js";
+import AppError from "../../utils/AppError.js";
+import env from "../../config/env.js";
+import generateTemporaryPassword from "../../utils/generateTemporaryPassword.js";
 import {
   TAgentListQuery,
   TAgentStatusPayload,
   TCreateAgentPayload,
   TInviteAgentPayload,
   TUpdateAgentPayload,
-} from "./agent.interface";
+} from "./agent.interface.js";
 
 const buildAgentWhere = (companyId: string, query: TAgentListQuery): Prisma.AgentWhereInput => {
   console.log(query);

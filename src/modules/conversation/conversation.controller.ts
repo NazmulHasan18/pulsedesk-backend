@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
-import { ConversationService } from "./conversation.service";
-import { IActor } from "./conversation.interface";
+import catchAsync from "../../utils/catchAsync.js";
+import sendResponse from "../../utils/sendResponse.js";
+import { ConversationService } from "./conversation.service.js";
+import { IActor } from "./conversation.interface.js";
 
 // Adjust req.user field names to match your actual JWT payload shape
 const getActor = (req: Request): IActor => ({

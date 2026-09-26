@@ -1,8 +1,8 @@
 import httpStatus from "http-status";
-import { CustomerService } from "./customer.service";
-import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
-import pick from "../../utils/pick";
+import { CustomerService } from "./customer.service.js";
+import catchAsync from "../../utils/catchAsync.js";
+import sendResponse from "../../utils/sendResponse.js";
+import pick from "../../utils/pick.js";
 
 const upsertCustomer = catchAsync(async (req, res) => {
   // companyId attached by identifyCompanyFromWidgetKey middleware

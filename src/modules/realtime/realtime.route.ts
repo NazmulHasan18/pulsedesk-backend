@@ -1,8 +1,8 @@
 // src/modules/realtime/realtime.route.ts
 
 import { Router } from "express";
-import auth, { Permission } from "../../middlewares/auth";
-import { RealtimeController } from "./realtime.controller";
+import auth, { Permission } from "../../middlewares/auth.js";
+import { RealtimeController } from "./realtime.controller.js";
 
 const router = Router();
 

@@ -1,9 +1,9 @@
 // note.route.ts
 import { Router } from "express";
-import auth, { Permission } from "../../middlewares/auth";
-import validateRequest from "../../middlewares/validateRequest";
-import { NoteValidation } from "./note.validation";
-import { NoteController } from "./note.controller";
+import auth, { Permission } from "../../middlewares/auth.js";
+import validateRequest from "../../middlewares/validateRequest.js";
+import { NoteValidation } from "./note.validation.js";
+import { NoteController } from "./note.controller.js";
 
 const router = Router({ mergeParams: true });
 

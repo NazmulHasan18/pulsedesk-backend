@@ -1,14 +1,14 @@
 import { Router } from "express";
-import { AuthRoutes } from "../modules/auth/auth.route";
-import { CompanyRoutes } from "../modules/company/company.route";
-import { AgentRoutes } from "../modules/agent/agent.route";
-import { ConversationRoutes } from "../modules/conversation/conversation.route";
-import { CustomerRoutes } from "../modules/customer/customer.route";
-import { MessageRoutes } from "../modules/message/message.route";
-import { NoteRoutes } from "../modules/note/note.route";
-import { FaqRoutes } from "../modules/faq/faq.route";
-import { DashboardRoutes } from "../modules/dashboard/dashboard.route";
-import { RealtimeRoutes } from "../modules/realtime/realtime.route";
+import { AuthRoutes } from "../modules/auth/auth.route.js";
+import { CompanyRoutes } from "../modules/company/company.route.js";
+import { AgentRoutes } from "../modules/agent/agent.route.js";
+import { ConversationRoutes } from "../modules/conversation/conversation.route.js";
+import { CustomerRoutes } from "../modules/customer/customer.route.js";
+import { MessageRoutes } from "../modules/message/message.route.js";
+import { NoteRoutes } from "../modules/note/note.route.js";
+import { FaqRoutes } from "../modules/faq/faq.route.js";
+import { DashboardRoutes } from "../modules/dashboard/dashboard.route.js";
+import { RealtimeRoutes } from "../modules/realtime/realtime.route.js";
 
 const router = Router();
 

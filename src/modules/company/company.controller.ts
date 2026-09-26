@@ -1,9 +1,9 @@
 import httpStatus from "http-status";
-import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
-import AppError from "../../utils/AppError";
-import { CompanyService } from "./company.service";
-import { AuthService } from "../auth/auth.service";
+import catchAsync from "../../utils/catchAsync.js";
+import sendResponse from "../../utils/sendResponse.js";
+import AppError from "../../utils/AppError.js";
+import { CompanyService } from "./company.service.js";
+import { AuthService } from "../auth/auth.service.js";
 
 const createCompany = catchAsync(async (req, res) => {
   const result = await AuthService.registerCompany({ ...req.body, password: "TemporaryPassword123!" });

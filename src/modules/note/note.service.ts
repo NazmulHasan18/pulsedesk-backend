@@ -1,7 +1,7 @@
 // note.service.ts
-import { prisma } from "../../lib/prisma";
-import AppError from "../../utils/AppError";
-import { ICreateNotePayload } from "./note.interface";
+import { prisma } from "../../lib/prisma.js";
+import AppError from "../../utils/AppError.js";
+import { ICreateNotePayload } from "./note.interface.js";
 
 const assertConversationInCompany = async (companyId: string, conversationId: string) => {
   const conversation = await prisma.conversation.findFirst({ where: { id: conversationId, companyId } });

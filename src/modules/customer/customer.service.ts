@@ -1,8 +1,8 @@
 import httpStatus from "http-status";
 import { Prisma } from "@prisma/client";
-import { IUpsertCustomerPayload, IUpdateCustomerPayload, ICustomerFilters } from "./customer.interface";
-import { prisma } from "../../lib/prisma";
-import AppError from "../../utils/AppError";
+import { IUpsertCustomerPayload, IUpdateCustomerPayload, ICustomerFilters } from "./customer.interface.js";
+import { prisma } from "../../lib/prisma.js";
+import AppError from "../../utils/AppError.js";
 
 // Called by the embeddable widget on every session init.
 // companyId is resolved upstream by the widget-key middleware, never trusted from the body.

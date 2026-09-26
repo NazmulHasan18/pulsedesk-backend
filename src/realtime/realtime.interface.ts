@@ -1,6 +1,6 @@
 // src/realtime/realtime.interface.ts
 
-import { REALTIME_EVENTS } from "./realtime.constants";
+import { REALTIME_EVENTS } from "./realtime.constants.js";
 
 export type RealtimeEventName = (typeof REALTIME_EVENTS)[keyof typeof REALTIME_EVENTS];
 

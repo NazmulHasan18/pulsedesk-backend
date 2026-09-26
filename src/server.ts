@@ -1,9 +1,9 @@
 import http from "http";
-import app from "./app";
-import env from "./config/env";
-import { prisma } from "./lib/prisma";
-import { seed } from "./helpers/seed";
-import { initSocketServer, realtimeEmitter } from "./realtime";
+import app from "./app.js";
+import env from "./config/env.js";
+import { prisma } from "./lib/prisma.js";
+import { seed } from "./helpers/seed.js";
+import { initSocketServer, realtimeEmitter } from "./realtime/index.js";
 
 let server: http.Server;
 
