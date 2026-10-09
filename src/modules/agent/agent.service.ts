@@ -109,8 +109,8 @@ const inviteAgent = async (companyId: string, payload: TInviteAgentPayload) => {
 };
 
 const listAgents = async (companyId: string, query: TAgentListQuery) => {
-  const page = Number(query.page) ?? 1;
-  const limit = Number(query.limit) ?? 10;
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
   const where = buildAgentWhere(companyId, query);
 

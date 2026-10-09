@@ -1,5 +1,4 @@
 // PulseDesk — Prisma schema
-// Multi-tenancy model: everything scopes via Company (site-id -> companyId)
 
 generator client {
   provider = "prisma-client-js"
