@@ -3,10 +3,11 @@ import app from "./app.js";
 import { prisma } from "./lib/prisma.js";
 import { seed } from "./helpers/seed.js";
 import { initSocketServer, realtimeEmitter } from "./realtime/index.js";
+import env from "./config/env.js";
 
 let server: http.Server;
 
-const PORT = Number(process.env.PORT) || 5000;
+const PORT = env.PORT;
 
 async function main() {
   try {

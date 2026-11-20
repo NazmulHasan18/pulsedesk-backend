@@ -36,9 +36,10 @@ router.patch(
   ConversationController.updatePriority,
 );
 
+// Assign/reassign is an ADMIN action. Agents will take chats via claim/unclaim (step 1.5).
 router.patch(
   "/:publicId/assign",
-  auth(Permission.agent),
+  auth(Permission.agentAdmin),
   validateRequest(ConversationValidation.assignAgentSchema),
   ConversationController.assignAgent,
 );

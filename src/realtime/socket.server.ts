@@ -6,12 +6,9 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import { createRedisClient } from "./redis.client.js";
 import { rooms } from "./realtime.constants.js";
 import { RealtimeIdentity } from "./realtime.interface.js";
-
-// ---- Adjust these two imports to match your actual module paths ----
-import { verifyToken } from "../utils/jwt.js"; // expected: (token: string) => { id, role, companyId?, tokenVersion }
+import { verifyToken, verifyWidgetToken } from "../utils/jwt.js";
 import env from "../config/env.js";
 import { prisma } from "../lib/prisma.js";
-// ----------------------------------------------------------------------
 
 declare module "socket.io" {
   interface SocketData {
@@ -19,13 +16,81 @@ declare module "socket.io" {
   }
 }
 
+type JoinAck = (result: { ok: true; conversationId: string } | { ok: false; error: string }) => void;
+
 let io: IOServer | null = null;
+
+// Resolves who is connecting. Agents/super-admins send their access JWT as
+// `token`; widget visitors send their widget session token as `widgetToken`.
+// Every check the HTTP auth() middleware does (tokenVersion, isActive) is
+// repeated here so a logged-out or deactivated agent can't keep a socket open.
+export const authenticateSocket = async (auth: Record<string, unknown>): Promise<RealtimeIdentity> => {
+  const { token, widgetToken } = auth;
+
+  if (typeof token === "string" && token) {
+    const decoded = verifyToken(token, env.JWT_ACCESS_SECRET);
+
+    if (decoded.userType === "superadmin") {
+      const superAdmin = await prisma.superAdmin.findUnique({
+        where: { publicId: decoded.id },
+        select: { id: true, tokenVersion: true },
+      });
+      if (!superAdmin || superAdmin.tokenVersion !== decoded.tokenVersion) {
+        throw new Error("Session expired");
+      }
+      return { actorType: "SUPERADMIN", actorId: superAdmin.id, companyId: null };
+    }
+
+    const agent = await prisma.agent.findUnique({
+      where: { publicId: decoded.id },
+      select: { id: true, companyId: true, tokenVersion: true, isActive: true },
+    });
+    if (!agent || agent.tokenVersion !== decoded.tokenVersion) {
+      throw new Error("Session expired");
+    }
+    if (!agent.isActive) {
+      throw new Error("Account deactivated");
+    }
+    return { actorType: "AGENT", actorId: agent.id, companyId: agent.companyId };
+  }
+
+  if (typeof widgetToken === "string" && widgetToken) {
+    const claims = verifyWidgetToken(widgetToken, env.WIDGET_SESSION_SECRET);
+    const customer = await prisma.customer.findFirst({
+      where: { id: claims.customerId, companyId: claims.companyId },
+      select: { id: true, companyId: true },
+    });
+    if (!customer) {
+      throw new Error("Widget session is no longer valid");
+    }
+    return { actorType: "CUSTOMER", actorId: customer.id, companyId: customer.companyId };
+  }
+
+  throw new Error("Authentication required");
+};
+
+// A socket may join a conversation room only if the conversation belongs to
+// its company, and - for a widget visitor - only if it is their own.
+export const findJoinableConversation = async (identity: RealtimeIdentity, conversationRef: string) => {
+  if (!identity.companyId) return null;
+
+  return prisma.conversation.findFirst({
+    where: {
+      OR: [{ id: conversationRef }, { publicId: conversationRef }],
+      companyId: identity.companyId,
+      ...(identity.actorType === "CUSTOMER" ? { customerId: identity.actorId } : {}),
+    },
+    select: { id: true },
+  });
+};
 
 export const initSocketServer = (httpServer: HttpServer): IOServer => {
   io = new IOServer(httpServer, {
     path: "/realtime/socket.io",
     cors: {
-      origin: "*", // TODO: restrict to allowed embed origins per company/plan
+      // TODO(1.2): widget sockets come from customer websites - validate them
+      // against each company's allowedOrigins once widget settings exist.
+      origin: env.CORS_ORIGINS,
       credentials: true,
     },
   });
@@ -38,45 +103,9 @@ export const initSocketServer = (httpServer: HttpServer): IOServer => {
 
   io.use(async (socket, next) => {
     try {
-      const { token, siteId, externalId } = socket.handshake.auth ?? {};
-
-      if (token) {
-        // Agent / Admin / SuperAdmin connection - reuses the same JWT
-        // verification as the HTTP auth() middleware.
-        const decoded = verifyToken(token, env.JWT_ACCESS_SECRET) as {
-          id: string;
-          role: "ADMIN" | "AGENT" | "SUPERADMIN";
-          companyId?: string;
-        };
-
-        socket.data.identity = {
-          actorType: decoded.role === "SUPERADMIN" ? "SUPERADMIN" : "AGENT",
-          actorId: decoded.id,
-          companyId: decoded.companyId ?? null,
-        };
-        return next();
-      }
-
-      if (siteId && externalId) {
-        // Anonymous widget customer - resolved by (companyId, externalId),
-        // same pair used by the widget's own upsert flow.
-        const company = await prisma.company.findUnique({ where: { siteId } });
-        if (!company) return next(new Error("Unknown site"));
-
-        const customer = await prisma.customer.findUnique({
-          where: { companyId_externalId: { companyId: company.id, externalId } },
-        });
-
-        socket.data.identity = {
-          actorType: "CUSTOMER",
-          actorId: customer?.id ?? externalId,
-          companyId: company.id,
-        };
-        return next();
-      }
-
-      return next(new Error("Authentication required"));
-    } catch (err) {
+      socket.data.identity = await authenticateSocket(socket.handshake.auth ?? {});
+      return next();
+    } catch {
       return next(new Error("Invalid or expired credentials"));
     }
   });
@@ -84,27 +113,41 @@ export const initSocketServer = (httpServer: HttpServer): IOServer => {
   io.on("connection", (socket: Socket) => {
     const identity = socket.data.identity;
 
-    if (identity.actorType !== "CUSTOMER" && identity.companyId) {
+    if (identity.actorType === "AGENT" && identity.companyId) {
       socket.join(rooms.company(identity.companyId));
       socket.join(rooms.agent(identity.actorId));
     }
 
-    // Customers don't auto-join the whole company room (they shouldn't see
-    // every conversation) - they join specific conversation rooms explicitly.
-    socket.on("conversation:join", (conversationId: string) => {
-      // TODO: verify identity is allowed into this conversation
-      // (agent of the same company, or the customer who owns it) before
-      // joining - this handler currently trusts the client-supplied id.
-      socket.join(rooms.conversation(conversationId));
+    // Customers don't auto-join the company room (they shouldn't see every
+    // conversation) - they join their own conversation rooms explicitly.
+    socket.on("conversation:join", async (conversationRef: unknown, ack?: JoinAck) => {
+      const reply: JoinAck = typeof ack === "function" ? ack : () => undefined;
+
+      if (typeof conversationRef !== "string" || !conversationRef) {
+        return reply({ ok: false, error: "conversationId is required" });
+      }
+
+      try {
+        const conversation = await findJoinableConversation(identity, conversationRef);
+        if (!conversation) {
+          return reply({ ok: false, error: "Conversation not found" });
+        }
+
+        await socket.join(rooms.conversation(conversation.id));
+        return reply({ ok: true, conversationId: conversation.id });
+      } catch {
+        return reply({ ok: false, error: "Could not join conversation" });
+      }
     });
 
-    socket.on("conversation:leave", (conversationId: string) => {
-      socket.leave(rooms.conversation(conversationId));
+    socket.on("conversation:leave", (conversationId: unknown) => {
+      if (typeof conversationId === "string") {
+        socket.leave(rooms.conversation(conversationId));
+      }
     });
 
     socket.on("disconnect", () => {
-      // Hook point for agent presence (emit AGENT_OFFLINE) once presence
-      // tracking is built.
+      // Hook point for agent presence (emit AGENT_OFFLINE) - step 1.3.
     });
   });
 

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "PulseDesk backend — Express + Prisma + PostgreSQL + TypeScript",
+  "description": "PulseDesk backend \u2014 Express + Prisma + PostgreSQL + TypeScript",
   "packageManager": "pnpm@12.3.4",
   "main": "dist/server.js",
   "scripts": {
@@ -16,7 +16,10 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src --ext .ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:db": "node scripts/prepare-test-db.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
@@ -45,9 +48,12 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "^26.1.1",
     "@types/pg": "^8.20.0",
+    "@types/supertest": "^7.2.1",
     "prisma": "^7.9.1",
+    "supertest": "^7.3.2",
     "tsx": "^4.23.1",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1"
   },
   "prisma": {
     "seed": "pnpm run prisma:seed"

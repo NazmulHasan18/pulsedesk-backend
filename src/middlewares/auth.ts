@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
-import { verifyToken, TJwtPayload, TUserType } from "../utils/jwt.js";
+import { verifyToken, TJwtPayload } from "../utils/jwt.js";
 import env from "../config/env.js";
 import { prisma } from "../lib/prisma.js";
 

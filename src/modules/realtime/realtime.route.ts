@@ -10,7 +10,7 @@ const router = Router();
 // Socket.io room, just delivered over a plain HTTP stream.
 router.get("/sse", auth(Permission.agent), RealtimeController.streamForAgent);
 
-// SSE fallback for anonymous widget customers.
-router.get("/sse/widget", RealtimeController.streamForCustomer);
+// The widget SSE stream was removed: it accepted any conversationId without
+// authentication. Widget visitors use Socket.io with a widget session token.
 
 export const RealtimeRoutes = router;
