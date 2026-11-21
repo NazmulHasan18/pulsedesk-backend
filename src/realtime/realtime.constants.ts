@@ -17,6 +17,13 @@ export const REALTIME_EVENTS = {
   CUSTOMER_TYPING: 'customer:typing',
 } as const;
 
+// Events a connected client sends to the server.
+export const CLIENT_EVENTS = {
+  JOIN_CONVERSATION: 'conversation:join',
+  LEAVE_CONVERSATION: 'conversation:leave',
+  TYPING: 'typing',
+} as const;
+
 export type RealtimeEventName = (typeof REALTIME_EVENTS)[keyof typeof REALTIME_EVENTS];
 
 // Single Redis channel for everything. The event name travels inside the

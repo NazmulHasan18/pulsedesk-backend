@@ -39,7 +39,12 @@ export const createTenant = async (label: string) => {
 
 export type Tenant = Awaited<ReturnType<typeof createTenant>>;
 
-export const deleteTenant = (tenant: Tenant) => prisma.company.delete({ where: { id: tenant.company.id } });
+// Same order as CompanyService.deleteCompany: notes block the agent cascade.
+export const deleteTenant = (tenant: Tenant) =>
+  prisma.$transaction([
+    prisma.conversationNote.deleteMany({ where: { conversation: { companyId: tenant.company.id } } }),
+    prisma.company.delete({ where: { id: tenant.company.id } }),
+  ]);
 
 export const agentToken = (agent: Tenant["agent"]) =>
   signToken(

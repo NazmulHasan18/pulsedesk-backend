@@ -150,7 +150,10 @@ const deleteCompany = async (publicId: string) => {
     throw new AppError(httpStatus.NOT_FOUND, "Company not found");
   }
 
-  await prisma.company.delete({ where: { publicId } });
+  await prisma.$transaction([
+    prisma.conversationNote.deleteMany({ where: { conversation: { companyId: company.id } } }),
+    prisma.company.delete({ where: { publicId } }),
+  ]);
 
   return null;
 };

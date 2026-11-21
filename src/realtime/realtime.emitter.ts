@@ -9,46 +9,68 @@ import { RealtimeEventName, RealtimeMessage } from "./realtime.interface.js";
 
 const INSTANCE_ID = randomUUID();
 
+export interface EmitTarget {
+  rooms?: string[];
+  except?: string[];
+}
+
 // This is the only thing services/controllers should ever import. It never
 // touches Socket.io or SSE directly - it publishes to Redis, and every app
 // instance (including the one that published) receives it back through the
-// subscription and delivers it locally. That means single-instance and
-// multi-instance deployments behave identically, and adding a new instance
-// later requires zero changes at call sites.
+// subscription and delivers it to its own local sockets. That means
+// single-instance and multi-instance deployments behave identically.
+//
+// Services call emit() after their database write has committed and do not
+// await it: a Redis hiccup must never fail a request whose data is already
+// saved. Until init() runs (tests, scripts) emit() is a no-op.
 class RealtimeEmitter {
-  private pubsub = new RedisPubSubAdapter();
-  private initialized = false;
+  private pubsub: RedisPubSubAdapter | null = null;
 
   async init(): Promise<void> {
-    if (this.initialized) return;
+    if (this.pubsub) return;
+    this.pubsub = new RedisPubSubAdapter();
     await this.pubsub.subscribe((message) => this.deliverLocally(message));
-    this.initialized = true;
   }
 
-  async emit<T>(event: RealtimeEventName, companyId: string, payload: T, room?: string): Promise<void> {
+  async emit<T>(event: RealtimeEventName, companyId: string, payload: T, target: EmitTarget = {}): Promise<void> {
+    if (!this.pubsub) return;
+
     const message: RealtimeMessage<T> = {
       event,
       companyId,
-      room,
+      rooms: target.rooms,
+      except: target.except,
       payload,
       emittedAt: new Date().toISOString(),
       originInstanceId: INSTANCE_ID,
     };
-    await this.pubsub.publish(message);
+
+    try {
+      await this.pubsub.publish(message);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(`[realtime] failed to publish ${event}:`, err);
+    }
   }
 
   async shutdown(): Promise<void> {
-    await this.pubsub.disconnect();
+    const pubsub = this.pubsub;
+    this.pubsub = null;
+    await pubsub?.disconnect();
   }
 
   private deliverLocally(message: RealtimeMessage): void {
-    const targetRoom = message.room ?? rooms.company(message.companyId);
+    const targetRooms = message.rooms?.length ? message.rooms : [rooms.company(message.companyId)];
 
     try {
-      getSocketServer().to(targetRoom).emit(message.event, message.payload);
+      // `local`: every instance receives this message from Redis, so each one
+      // only delivers to its own sockets. Without it the Socket.io Redis
+      // adapter would fan out again and clients would get duplicates.
+      let operator = getSocketServer().local.to(targetRooms);
+      if (message.except?.length) operator = operator.except(message.except);
+      operator.emit(message.event, message.payload);
     } catch {
-      // Socket.io not initialized yet (e.g. during tests/scripts) - SSE
-      // clients still get the message below.
+      // Socket.io not initialized on this process - SSE clients still get it.
     }
 
     sseManager.deliver(message);

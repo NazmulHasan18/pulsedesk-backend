@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "PulseDesk backend \u2014 Express + Prisma + PostgreSQL + TypeScript",
+  "description": "PulseDesk backend - Express + Prisma + PostgreSQL + TypeScript",
   "packageManager": "pnpm@12.3.4",
   "main": "dist/server.js",
   "scripts": {
@@ -50,6 +50,7 @@
     "@types/pg": "^8.20.0",
     "@types/supertest": "^7.2.1",
     "prisma": "^7.9.1",
+    "socket.io-client": "4.8.1",
     "supertest": "^7.3.2",
     "tsx": "^4.23.1",
     "typescript": "^7.0.2",

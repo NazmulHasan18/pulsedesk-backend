@@ -87,7 +87,12 @@ describe("conversation assignment", () => {
 describe("socket authentication", () => {
   it("accepts an active agent", async () => {
     const identity = await authenticateSocket({ token: agentToken(a.agent) });
-    expect(identity).toEqual({ actorType: "AGENT", actorId: a.agent.id, companyId: a.company.id });
+    expect(identity).toEqual({
+      actorType: "AGENT",
+      actorId: a.agent.id,
+      companyId: a.company.id,
+      name: a.agent.name,
+    });
   });
 
   it("rejects a deactivated agent", async () => {

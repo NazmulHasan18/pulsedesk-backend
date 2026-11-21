@@ -49,16 +49,16 @@ class SSEManager {
     this.clients.delete(id);
   }
 
-  // Delivers to any client belonging to the message's company, additionally
-  // gated by `room` when the message targets something narrower (e.g. a
-  // single conversation) rather than the whole company feed.
+  // Delivers to clients of the message's company that are in one of the
+  // target rooms (the company room by default) and in none of the excluded ones.
   deliver(message: RealtimeMessage): void {
-    const companyRoom = rooms.company(message.companyId);
+    const targetRooms = message.rooms?.length ? message.rooms : [rooms.company(message.companyId)];
+    const excluded = message.except ?? [];
 
     for (const client of this.clients.values()) {
       if (client.companyId !== message.companyId) continue;
-      if (message.room && !client.rooms.has(message.room)) continue;
-      if (!message.room && !client.rooms.has(companyRoom)) continue;
+      if (!targetRooms.some((room) => client.rooms.has(room))) continue;
+      if (excluded.some((room) => client.rooms.has(room))) continue;
 
       client.res.write(`event: ${message.event}\n`);
       client.res.write(`data: ${JSON.stringify(message.payload)}\n\n`);

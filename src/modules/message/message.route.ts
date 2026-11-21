@@ -21,12 +21,8 @@ agentRouter.get(
   MessageController.getAgentMessages,
 );
 agentRouter.patch("/read", auth(Permission.agent), MessageController.markReadByAgent);
-agentRouter.post(
-  "/typing",
-  auth(Permission.agent),
-  validateRequest(MessageValidation.typingValidation),
-  MessageController.notifyTyping,
-);
+
+// Typing indicators are socket-only (the `typing` event), not REST.
 
 // Public widget side — mounted under /widget/conversations/:conversationId/messages
 const widgetRouter = Router({ mergeParams: true });
@@ -44,11 +40,5 @@ widgetRouter.get(
   MessageController.getCustomerMessages,
 );
 widgetRouter.patch("/read", widgetAuth, MessageController.markReadByCustomer);
-widgetRouter.post(
-  "/typing",
-  widgetAuth,
-  validateRequest(MessageValidation.typingValidation),
-  MessageController.notifyTyping,
-);
 
 export const MessageRoutes = { agentRouter, widgetRouter };
