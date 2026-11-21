@@ -2,6 +2,7 @@ import { prisma } from "../../lib/prisma.js"; // adjust to your actual prisma cl
 import AppError from "../../utils/AppError.js";
 import { IActor, IConversationFilters } from "./conversation.interface.js";
 import { ConversationStatus, ConversationPriority, ConversationSource, Prisma } from "@prisma/client";
+import { OPEN_CONVERSATION_STATUSES } from "./conversation.constants.js";
 
 const conversationInclude = {
   customer: true,
@@ -57,7 +58,7 @@ const createOrOpenConversation = async (
     where: {
       companyId,
       customerId,
-      status: { in: [ConversationStatus.OPEN, ConversationStatus.PENDING] },
+      status: { in: OPEN_CONVERSATION_STATUSES },
     },
     include: conversationInclude,
   });
@@ -186,9 +187,15 @@ const assignAgent = async (companyId: string, publicId: string, agentId: string 
     }
   }
 
+  // Assigning a waiting chat makes it ACTIVE; unassigning an active chat puts
+  // it back in the WAITING queue. Resolved/closed/AI chats keep their status.
+  let status = conversation.status;
+  if (agentId && conversation.status === ConversationStatus.WAITING) status = ConversationStatus.ACTIVE;
+  if (!agentId && conversation.status === ConversationStatus.ACTIVE) status = ConversationStatus.WAITING;
+
   const updated = await prisma.conversation.update({
     where: { id: conversation.id },
-    data: { assignedAgentId: agentId },
+    data: { assignedAgentId: agentId, status },
     include: conversationInclude,
   });
 
@@ -196,6 +203,10 @@ const assignAgent = async (companyId: string, publicId: string, agentId: string 
     previousAgentId: conversation.assignedAgentId,
     newAgentId: agentId,
   });
+
+  if (status !== conversation.status) {
+    await logEvent(conversation.id, "STATUS_CHANGED", actor, { from: conversation.status, to: status });
+  }
 
   return updated;
 };

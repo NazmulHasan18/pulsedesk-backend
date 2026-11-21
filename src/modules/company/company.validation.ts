@@ -1,5 +1,6 @@
 import { CompanyPlan } from "@prisma/client";
 import { z } from "zod";
+import { companySettingsSchema } from "./company.settings.js";
 
 const companyIdParamsSchema = z.object({
   params: z.object({
@@ -15,7 +16,7 @@ const createCompanySchema = z.object({
     adminName: z.string({ error: "Admin name is required" }).min(2, "Name must be at least 2 characters"),
     email: z.string({ error: "Email is required" }).email("Invalid email address"),
     plan: z.enum(CompanyPlan).optional(),
-    settings: z.record(z.string(), z.unknown()).optional(),
+    settings: companySettingsSchema.optional(),
   }),
 });
 
@@ -23,18 +24,15 @@ const updateCompanySchema = z.object({
   body: z.object({
     name: z.string().min(2, "Company name must be at least 2 characters").optional(),
     plan: z.string().optional(),
-    settings: z.record(z.string(), z.unknown()).optional(),
+    settings: companySettingsSchema.optional(),
   }),
 });
 
 const updateCompanySettingsSchema = z.object({
   body: z.object({
-    settings: z
-      .object({})
-      .passthrough()
-      .refine((value) => Object.keys(value).length > 0, {
-        message: "Settings object is required",
-      }),
+    settings: companySettingsSchema.refine((value) => Object.keys(value).length > 0, {
+      message: "Settings object is required",
+    }),
   }),
 });
 

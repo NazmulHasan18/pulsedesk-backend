@@ -4,6 +4,7 @@ import env from "../config/env.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
 import { verifyWidgetToken } from "../utils/jwt.js";
+import { isOriginAllowed, resolveWidgetSettings } from "../modules/company/company.settings.js";
 
 const extractSessionToken = (req: Request): string => {
   const rawToken = req.header("x-widget-session-token") || req.header("authorization");
@@ -34,7 +35,7 @@ export const widgetAuth = catchAsync(async (req, _res, next) => {
       id: true,
       publicId: true,
       externalId: true,
-      company: { select: { id: true, publicId: true, siteId: true } },
+      company: { select: { id: true, publicId: true, siteId: true, name: true, settings: true } },
     },
   });
 
@@ -42,8 +43,13 @@ export const widgetAuth = catchAsync(async (req, _res, next) => {
     throw new AppError(401, "Widget session is no longer valid");
   }
 
+  const { allowedOrigins } = resolveWidgetSettings(customer.company);
+  if (!isOriginAllowed(req.header("origin"), allowedOrigins)) {
+    throw new AppError(403, "This website is not allowed to use this chat widget");
+  }
+
   req.widget = {
-    company: customer.company,
+    company: { id: customer.company.id, publicId: customer.company.publicId, siteId: customer.company.siteId },
     customer: { id: customer.id, publicId: customer.publicId, externalId: customer.externalId },
   };
 

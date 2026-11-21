@@ -88,8 +88,9 @@ export const initSocketServer = (httpServer: HttpServer): IOServer => {
   io = new IOServer(httpServer, {
     path: "/realtime/socket.io",
     cors: {
-      // TODO(1.2): widget sockets come from customer websites - validate them
-      // against each company's allowedOrigins once widget settings exist.
+      // TODO(1.3): widget sockets come from customer websites - allow them here
+      // and check the handshake origin against the company's allowedOrigins
+      // (isOriginAllowed in company.settings.ts) inside authenticateSocket.
       origin: env.CORS_ORIGINS,
       credentials: true,
     },
