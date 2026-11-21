@@ -7,6 +7,7 @@ import { signWidgetToken } from "../../utils/jwt.js";
 import { isOriginAllowed, resolveWidgetSettings } from "../company/company.settings.js";
 import { ConversationService } from "../conversation/conversation.service.js";
 import { OPEN_CONVERSATION_STATUSES } from "../conversation/conversation.constants.js";
+import { areAgentsOnline } from "../../realtime/presence.js";
 
 export const hashVisitorKey = (visitorKey: string) => createHash("sha256").update(visitorKey).digest("hex");
 
@@ -42,6 +43,8 @@ const getConfig = async (siteId: string, origin?: string) => {
     primaryColor: settings.primaryColor,
     secondaryColor: settings.secondaryColor,
     widgetEnabled: settings.widgetEnabled,
+    // Live updates arrive over the socket as widget:availability.
+    agentsOnline: await areAgentsOnline(company.id),
   };
 };
 

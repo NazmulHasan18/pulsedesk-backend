@@ -64,6 +64,7 @@ describe("GET /widget/config", () => {
       primaryColor: "#4B4FE0",
       secondaryColor: expect.stringMatching(/^#[0-9A-F]{6}$/i),
       widgetEnabled: true,
+      agentsOnline: false,
     });
   });
 });

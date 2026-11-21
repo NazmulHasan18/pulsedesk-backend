@@ -303,6 +303,29 @@ describe("presence", () => {
   });
 });
 
+describe("agent availability for visitors", () => {
+  it("visitors learn when the first agent comes online and the last one leaves, without agent details", async () => {
+    const visitor = await asVisitor(b);
+    const otherCompanyVisitor = await asVisitor(a);
+    await settle(500); // let presence updates from earlier tests' disconnects pass
+    const seen = record(visitor, "widget:availability");
+    const leaked = record(otherCompanyVisitor, "widget:availability");
+
+    const config = () => request(app).get(`/api/v1/widget/config?siteId=${b.company.siteId}`);
+    expect((await config()).body.data.agentsOnline).toBe(false);
+
+    const agent = await asAgent(b.agent);
+    await settle(500);
+    expect(seen).toEqual([{ agentsOnline: true }]);
+    expect((await config()).body.data.agentsOnline).toBe(true);
+
+    agent.disconnect();
+    await settle(500);
+    expect(seen).toEqual([{ agentsOnline: true }, { agentsOnline: false }]);
+    expect(leaked).toEqual([]);
+  });
+});
+
 describe("retries and reconnects", () => {
   it("sending the same clientMessageId twice saves and broadcasts one message", async () => {
     const agent = await asAgent(a.agent);

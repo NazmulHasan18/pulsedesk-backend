@@ -15,6 +15,9 @@ const key = (agentId: string) => `pulsedesk:presence:agent:${agentId}`;
 let redis: Redis | null = null;
 const client = () => (redis ??= createRedisClient("presence"));
 
+export const areAgentsOnline = async (companyId: string) =>
+  (await prisma.agent.count({ where: { companyId, isActive: true, isOnline: true } })) > 0;
+
 const setOnline = async (agentId: string, companyId: string, isOnline: boolean) => {
   const agent = await prisma.agent.update({
     where: { id: agentId },
@@ -27,6 +30,14 @@ const setOnline = async (agentId: string, companyId: string, isOnline: boolean) 
     companyId,
     { agentId: agent.id, publicId: agent.publicId, isOnline },
     { rooms: [rooms.company(companyId)] },
+  );
+
+  // Visitors only learn whether someone is available, never who.
+  void realtimeEmitter.emit(
+    REALTIME_EVENTS.AGENTS_AVAILABILITY,
+    companyId,
+    { agentsOnline: await areAgentsOnline(companyId) },
+    { rooms: [rooms.visitors(companyId)] },
   );
 };
 

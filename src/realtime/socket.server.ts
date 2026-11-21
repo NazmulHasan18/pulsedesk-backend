@@ -227,6 +227,10 @@ export const initSocketServer = (httpServer: HttpServer): IOServer => {
       });
     }
 
+    if (identity.actorType === "CUSTOMER" && identity.companyId) {
+      socket.join(rooms.visitors(identity.companyId));
+    }
+
     socket.on(CLIENT_EVENTS.JOIN_CONVERSATION, (ref: unknown, ack?: JoinAck) => handleJoin(socket, ref, ack));
     socket.on(CLIENT_EVENTS.LEAVE_CONVERSATION, (ref: unknown) => handleLeave(socket, ref));
     socket.on(CLIENT_EVENTS.TYPING, (input: unknown) => handleTyping(socket, input));
