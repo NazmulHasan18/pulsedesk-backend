@@ -15,6 +15,15 @@ export const REALTIME_EVENTS = {
   AGENT_OFFLINE: 'agent:offline',
   AGENT_TYPING: 'agent:typing',
   CUSTOMER_TYPING: 'customer:typing',
+  // To widget visitors: whether any agent of the company is online right now.
+  AGENTS_AVAILABILITY: 'widget:availability',
+} as const;
+
+// Events a connected client sends to the server.
+export const CLIENT_EVENTS = {
+  JOIN_CONVERSATION: 'conversation:join',
+  LEAVE_CONVERSATION: 'conversation:leave',
+  TYPING: 'typing',
 } as const;
 
 export type RealtimeEventName = (typeof REALTIME_EVENTS)[keyof typeof REALTIME_EVENTS];
@@ -31,4 +40,6 @@ export const rooms = {
   company: (companyId: string) => `company:${companyId}`,
   conversation: (conversationId: string) => `conversation:${conversationId}`,
   agent: (agentId: string) => `agent:${agentId}`,
+  // Every connected widget visitor of a company (for availability only).
+  visitors: (companyId: string) => `visitors:${companyId}`,
 };

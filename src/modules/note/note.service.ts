@@ -2,6 +2,7 @@
 import { prisma } from "../../lib/prisma.js";
 import AppError from "../../utils/AppError.js";
 import { ICreateNotePayload } from "./note.interface.js";
+import { ConversationRealtime } from "../conversation/conversation.realtime.js";
 
 const assertConversationInCompany = async (companyId: string, conversationId: string) => {
   const conversation = await prisma.conversation.findFirst({ where: { id: conversationId, companyId } });
@@ -15,9 +16,9 @@ const createNote = async (
   authorId: string,
   payload: ICreateNotePayload,
 ) => {
-  return prisma.$transaction(async (tx) => {
-    await assertConversationInCompany(companyId, conversationId);
+  const conversation = await assertConversationInCompany(companyId, conversationId);
 
+  const note = await prisma.$transaction(async (tx) => {
     const note = await tx.conversationNote.create({
       data: { conversationId, authorId, content: payload.content },
       include: { author: { select: { id: true, name: true, publicId: true } } },
@@ -29,6 +30,9 @@ const createNote = async (
 
     return note;
   });
+
+  ConversationRealtime.noteAdded(conversation, note);
+  return note;
 };
 
 const getNotes = async (companyId: string, conversationId: string) => {

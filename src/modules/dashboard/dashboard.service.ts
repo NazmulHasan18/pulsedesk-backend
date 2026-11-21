@@ -11,12 +11,15 @@ import {
   StatusCounts,
 } from "./dashboard.interface.js";
 import { prisma } from "../../lib/prisma.js";
+import { OPEN_CONVERSATION_STATUSES } from "../conversation/conversation.constants.js";
 
 // ---------- helpers: zero-fill enum-keyed count maps ----------
 
 const zeroStatusCounts = (): StatusCounts => ({
-  OPEN: 0,
-  PENDING: 0,
+  WAITING: 0,
+  ACTIVE: 0,
+  AI_HANDLED: 0,
+  RESOLVED: 0,
   CLOSED: 0,
 });
 
@@ -89,7 +92,7 @@ const getOverview = async (companyId: string): Promise<DashboardOverview> => {
       where: {
         companyId,
         assignedAgentId: null,
-        status: { not: ConversationStatus.CLOSED },
+        status: { in: OPEN_CONVERSATION_STATUSES },
       },
     }),
     prisma.agent.count({ where: { companyId, isActive: true } }),
@@ -153,7 +156,7 @@ const getAgentWorkload = async (companyId: string): Promise<AgentWorkloadItem[]>
 
   return agents.map((agent) => {
     const byStatus = byAgent.get(agent.id) ?? zeroStatusCounts();
-    const total = byStatus.OPEN + byStatus.PENDING + byStatus.CLOSED;
+    const total = Object.values(byStatus).reduce((sum, count) => sum + count, 0);
     return {
       agentId: agent.id,
       publicId: agent.publicId,

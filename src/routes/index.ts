@@ -9,6 +9,7 @@ import { NoteRoutes } from "../modules/note/note.route.js";
 import { FaqRoutes } from "../modules/faq/faq.route.js";
 import { DashboardRoutes } from "../modules/dashboard/dashboard.route.js";
 import { RealtimeRoutes } from "../modules/realtime/realtime.route.js";
+import { WidgetRoutes } from "../modules/widget/widget.route.js";
 
 const router = Router();
 
@@ -40,6 +41,10 @@ const moduleRoutes: { path: string; route: Router }[] = [
   {
     path: "/conversations/:conversationId/notes",
     route: NoteRoutes,
+  },
+  {
+    path: "/widget",
+    route: WidgetRoutes,
   },
   {
     path: "/widget/conversations/:conversationId/messages",

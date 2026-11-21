@@ -12,6 +12,7 @@ export interface RealtimeIdentity {
   actorType: RealtimeActorType;
   actorId: string; // Agent.id / Customer.id / SuperAdmin.id
   companyId: string | null; // null for SuperAdmin, which is not company-scoped
+  name?: string; // agent display name, shown in typing indicators
 }
 
 // Envelope published on Redis and delivered to transports (Socket.io / SSE).
@@ -20,7 +21,12 @@ export interface RealtimeIdentity {
 export interface RealtimeMessage<T = unknown> {
   event: RealtimeEventName;
   companyId: string;
-  room?: string; // narrower target, e.g. conversation:<id>; defaults to the company room
+  // Rooms to deliver to (a socket in several of them gets the event once).
+  // Defaults to the company room.
+  rooms?: string[];
+  // Sockets in any of these rooms are skipped, e.g. send a visitor-safe copy
+  // to a conversation room except the agents (who get the full copy).
+  except?: string[];
   payload: T;
   emittedAt: string; // ISO timestamp
   originInstanceId: string; // which app process published it

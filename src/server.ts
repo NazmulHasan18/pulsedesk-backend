@@ -2,7 +2,7 @@ import http from "http";
 import app from "./app.js";
 import { prisma } from "./lib/prisma.js";
 import { seed } from "./helpers/seed.js";
-import { initSocketServer, realtimeEmitter } from "./realtime/index.js";
+import { closeSocketServer, initSocketServer, presence, realtimeEmitter } from "./realtime/index.js";
 import env from "./config/env.js";
 
 let server: http.Server;
@@ -35,14 +35,11 @@ const shutdown = async (signal: string) => {
   // eslint-disable-next-line no-console
   console.log(`\n${signal} received. Shutting down gracefully...`);
 
+  await closeSocketServer();
+  await Promise.all([realtimeEmitter.shutdown(), presence.shutdown()]);
   await prisma.$disconnect();
-  await realtimeEmitter.shutdown();
 
-  if (server) {
-    server.close(() => process.exit(0));
-  } else {
-    process.exit(0);
-  }
+  process.exit(0);
 };
 
 process.on("SIGINT", () => shutdown("SIGINT"));

@@ -19,7 +19,6 @@ const baseOptions: RedisOptions = {
 export const createRedisClient = (connectionName: string): Redis => {
   const client = new Redis(REDIS_URL, { ...baseOptions, connectionName });
 
-  console.log(`[redis:${connectionName}] connecting to ${REDIS_URL}...`);
 
   client.on("error", (err) => {
     // eslint-disable-next-line no-console

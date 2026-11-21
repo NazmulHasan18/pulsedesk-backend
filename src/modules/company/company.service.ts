@@ -1,14 +1,11 @@
 import httpStatus from "http-status";
-import { CompanyPlan, Prisma } from "@prisma/client";
+import { CompanyPlan, ConversationStatus, Prisma } from "@prisma/client";
+import { OPEN_CONVERSATION_STATUSES } from "../conversation/conversation.constants.js";
 import { prisma } from "../../lib/prisma.js";
 import AppError from "../../utils/AppError.js";
-import generateSiteId from "../../utils/generateSiteId.js";
-import {
-  TCompanyListQuery,
-  TCompanySettingsPayload,
-  TCreateCompanyPayload,
-  TUpdateCompanyPayload,
-} from "./company.interface.js";
+
+import { mergeCompanySettings } from "./company.settings.js";
+import { TCompanyListQuery, TCompanySettingsPayload, TUpdateCompanyPayload } from "./company.interface.js";
 
 const buildCompanyWhere = (search?: string, plan?: CompanyPlan): Prisma.CompanyWhereInput => {
   const where: Prisma.CompanyWhereInput = {};
@@ -61,17 +58,6 @@ const formatCompany = (company: {
     createdAt: company.createdAt,
     updatedAt: company.updatedAt,
   };
-};
-
-const ensureUniqueSiteId = async () => {
-  let siteId = generateSiteId();
-
-  // eslint-disable-next-line no-await-in-loop
-  while (await prisma.company.findUnique({ where: { siteId } })) {
-    siteId = generateSiteId();
-  }
-
-  return siteId;
 };
 
 const listCompanies = async (query: TCompanyListQuery) => {
@@ -146,7 +132,7 @@ const updateCompany = async (publicId: string, payload: TUpdateCompanyPayload) =
     data: {
       ...(payload.name ? { name: payload.name } : {}),
       ...(payload.plan ? { plan: payload.plan } : {}),
-      ...(payload.settings ? { settings: payload.settings } : {}),
+      ...(payload.settings ? { settings: mergeCompanySettings(company.settings, payload.settings) } : {}),
     },
   });
 
@@ -164,7 +150,10 @@ const deleteCompany = async (publicId: string) => {
     throw new AppError(httpStatus.NOT_FOUND, "Company not found");
   }
 
-  await prisma.company.delete({ where: { publicId } });
+  await prisma.$transaction([
+    prisma.conversationNote.deleteMany({ where: { conversation: { companyId: company.id } } }),
+    prisma.company.delete({ where: { publicId } }),
+  ]);
 
   return null;
 };
@@ -181,9 +170,7 @@ const buildStats = async (companyId: string) => {
     inactiveAgents,
     totalCustomers,
     totalConversations,
-    openConversations,
-    pendingConversations,
-    closedConversations,
+    conversationsByStatus,
     totalFaqDocs,
   ] = await Promise.all([
     prisma.agent.count({ where: { companyId } }),
@@ -191,9 +178,7 @@ const buildStats = async (companyId: string) => {
     prisma.agent.count({ where: { companyId, isActive: false } }),
     prisma.customer.count({ where: { companyId } }),
     prisma.conversation.count({ where: { companyId } }),
-    prisma.conversation.count({ where: { companyId, status: "OPEN" } }),
-    prisma.conversation.count({ where: { companyId, status: "PENDING" } }),
-    prisma.conversation.count({ where: { companyId, status: "CLOSED" } }),
+    prisma.conversation.groupBy({ by: ["status"], where: { companyId }, _count: true }),
     prisma.faqDoc.count({ where: { companyId } }),
   ]);
 
@@ -207,6 +192,11 @@ const buildStats = async (companyId: string) => {
       })
     : 0;
 
+  const countStatuses = (...statuses: ConversationStatus[]) =>
+    conversationsByStatus
+      .filter((row) => statuses.includes(row.status))
+      .reduce((sum, row) => sum + row._count, 0);
+
   return {
     agents: {
       total: totalAgents,
@@ -216,9 +206,12 @@ const buildStats = async (companyId: string) => {
     customers: totalCustomers,
     conversations: {
       total: totalConversations,
-      open: openConversations,
-      pending: pendingConversations,
-      closed: closedConversations,
+      open: countStatuses(...OPEN_CONVERSATION_STATUSES),
+      waiting: countStatuses(ConversationStatus.WAITING),
+      active: countStatuses(ConversationStatus.ACTIVE),
+      aiHandled: countStatuses(ConversationStatus.AI_HANDLED),
+      resolved: countStatuses(ConversationStatus.RESOLVED),
+      closed: countStatuses(ConversationStatus.CLOSED),
     },
     messages: totalMessages,
     faqDocs: totalFaqDocs,
@@ -286,7 +279,7 @@ const updateMyCompany = async (companyId: string, payload: TUpdateCompanyPayload
     data: {
       ...(payload.name ? { name: payload.name } : {}),
       ...(payload.plan ? { plan: payload.plan } : {}),
-      ...(payload.settings ? { settings: payload.settings } : {}),
+      ...(payload.settings ? { settings: mergeCompanySettings(company.settings, payload.settings) } : {}),
     },
   });
 

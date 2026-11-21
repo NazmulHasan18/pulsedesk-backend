@@ -10,9 +10,11 @@ export interface IAttachment {
 export interface ISendMessagePayload {
   content: string;
   attachments?: IAttachment[] | Prisma.InputJsonValue;
+  clientMessageId?: string;
 }
 
 export interface IListMessagesQuery {
-  cursor?: string;
+  cursor?: string; // older page: messages before this id
+  after?: string; // catch-up: messages after this id
   limit?: number;
 }

@@ -4,20 +4,6 @@ import catchAsync from "../../utils/catchAsync.js";
 import sendResponse from "../../utils/sendResponse.js";
 import pick from "../../utils/pick.js";
 
-const upsertCustomer = catchAsync(async (req, res) => {
-  // companyId attached by identifyCompanyFromWidgetKey middleware
-  const companyId = req.widget?.company.id as string;
-
-  const result = await CustomerService.upsertCustomer(companyId, req.body);
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Customer synced successfully",
-    data: result,
-  });
-});
-
 const getAllCustomers = catchAsync(async (req, res) => {
   const companyId = req.user!.companyId as string;
   const filters = pick(req.query, ["searchTerm", "email"]);
@@ -80,7 +66,6 @@ const deleteCustomer = catchAsync(async (req, res) => {
 });
 
 export const CustomerController = {
-  upsertCustomer,
   getAllCustomers,
   getCustomerByPublicId,
   updateCustomer,

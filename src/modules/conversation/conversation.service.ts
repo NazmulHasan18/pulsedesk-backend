@@ -2,6 +2,9 @@ import { prisma } from "../../lib/prisma.js"; // adjust to your actual prisma cl
 import AppError from "../../utils/AppError.js";
 import { IActor, IConversationFilters } from "./conversation.interface.js";
 import { ConversationStatus, ConversationPriority, ConversationSource, Prisma } from "@prisma/client";
+import { OPEN_CONVERSATION_STATUSES } from "./conversation.constants.js";
+import { ConversationRealtime } from "./conversation.realtime.js";
+import { REALTIME_EVENTS } from "../../realtime/realtime.constants.js";
 
 const conversationInclude = {
   customer: true,
@@ -57,7 +60,7 @@ const createOrOpenConversation = async (
     where: {
       companyId,
       customerId,
-      status: { in: [ConversationStatus.OPEN, ConversationStatus.PENDING] },
+      status: { in: OPEN_CONVERSATION_STATUSES },
     },
     include: conversationInclude,
   });
@@ -72,6 +75,7 @@ const createOrOpenConversation = async (
   });
 
   await logEvent(conversation.id, "CREATED", { id: "SYSTEM", type: "SYSTEM" }, { source });
+  ConversationRealtime.conversationCreated(conversation);
 
   return conversation;
 };
@@ -146,6 +150,7 @@ const updateStatus = async (
     from: conversation.status,
     to: status,
   });
+  ConversationRealtime.statusChanged(updated, status, conversation.status);
 
   return updated;
 };
@@ -172,6 +177,7 @@ const updatePriority = async (
     from: conversation.priority,
     to: priority,
   });
+  ConversationRealtime.updatedForAgents(REALTIME_EVENTS.CONVERSATION_PRIORITY_CHANGED, updated);
 
   return updated;
 };
@@ -186,9 +192,15 @@ const assignAgent = async (companyId: string, publicId: string, agentId: string 
     }
   }
 
+  // Assigning a waiting chat makes it ACTIVE; unassigning an active chat puts
+  // it back in the WAITING queue. Resolved/closed/AI chats keep their status.
+  let status = conversation.status;
+  if (agentId && conversation.status === ConversationStatus.WAITING) status = ConversationStatus.ACTIVE;
+  if (!agentId && conversation.status === ConversationStatus.ACTIVE) status = ConversationStatus.WAITING;
+
   const updated = await prisma.conversation.update({
     where: { id: conversation.id },
-    data: { assignedAgentId: agentId },
+    data: { assignedAgentId: agentId, status },
     include: conversationInclude,
   });
 
@@ -196,6 +208,13 @@ const assignAgent = async (companyId: string, publicId: string, agentId: string 
     previousAgentId: conversation.assignedAgentId,
     newAgentId: agentId,
   });
+
+  if (status !== conversation.status) {
+    await logEvent(conversation.id, "STATUS_CHANGED", actor, { from: conversation.status, to: status });
+  }
+
+  ConversationRealtime.assignmentChanged(updated);
+  ConversationRealtime.statusChanged(updated, status, conversation.status);
 
   return updated;
 };
@@ -214,6 +233,7 @@ const addLabel = async (companyId: string, publicId: string, label: string, acto
   });
 
   await logEvent(conversation.id, "LABEL_ADDED", actor, { label });
+  ConversationRealtime.updatedForAgents(REALTIME_EVENTS.CONVERSATION_LABEL_ADDED, updated);
 
   return updated;
 };
@@ -228,6 +248,7 @@ const removeLabel = async (companyId: string, publicId: string, label: string, a
   });
 
   await logEvent(conversation.id, "LABEL_REMOVED", actor, { label });
+  ConversationRealtime.updatedForAgents(REALTIME_EVENTS.CONVERSATION_LABEL_REMOVED, updated);
 
   return updated;
 };
@@ -235,18 +256,28 @@ const removeLabel = async (companyId: string, publicId: string, label: string, a
 const addNote = async (
   companyId: string,
   publicId: string,
-  authorId: string,
+  authorPublicId: string,
   content: string,
   actor: IActor,
 ) => {
   const conversation = await findByPublicIdOrThrow(companyId, publicId);
 
+  // The access token carries the agent's publicId; the note needs the internal id.
+  const author = await prisma.agent.findFirst({
+    where: { publicId: authorPublicId, companyId },
+    select: { id: true },
+  });
+  if (!author) {
+    throw new AppError(404, "Agent not found in this company");
+  }
+
   const note = await prisma.conversationNote.create({
-    data: { conversationId: conversation.id, authorId, content },
+    data: { conversationId: conversation.id, authorId: author.id, content },
     include: { author: { select: { id: true, name: true, email: true } } },
   });
 
   await logEvent(conversation.id, "NOTE_ADDED", actor, { noteId: note.id });
+  ConversationRealtime.noteAdded(conversation, note);
 
   return note;
 };

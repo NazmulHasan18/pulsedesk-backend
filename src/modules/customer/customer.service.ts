@@ -1,37 +1,8 @@
 import httpStatus from "http-status";
 import { Prisma } from "@prisma/client";
-import { IUpsertCustomerPayload, IUpdateCustomerPayload, ICustomerFilters } from "./customer.interface.js";
+import { IUpdateCustomerPayload, ICustomerFilters } from "./customer.interface.js";
 import { prisma } from "../../lib/prisma.js";
 import AppError from "../../utils/AppError.js";
-
-// Called by the embeddable widget on every session init.
-// companyId is resolved upstream by the widget-key middleware, never trusted from the body.
-const upsertCustomer = async (companyId: string, payload: IUpsertCustomerPayload) => {
-  const { externalId, name, email, metadata } = payload;
-
-  const customer = await prisma.customer.upsert({
-    where: {
-      companyId_externalId: {
-        companyId,
-        externalId,
-      },
-    },
-    update: {
-      ...(name !== undefined && { name }),
-      ...(email !== undefined && { email }),
-      ...(metadata !== undefined && { metadata }),
-    },
-    create: {
-      companyId,
-      externalId,
-      name,
-      email,
-      metadata,
-    },
-  });
-
-  return customer;
-};
 
 const getAllCustomers = async (
   companyId: string,
@@ -126,7 +97,6 @@ const deleteCustomer = async (companyId: string, publicId: string) => {
 };
 
 export const CustomerService = {
-  upsertCustomer,
   getAllCustomers,
   getCustomerByPublicId,
   updateCustomer,

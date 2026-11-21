@@ -9,10 +9,12 @@ import globalErrorHandler from "./middlewares/globalErrorHandler.js";
 
 const app: Application = express();
 
+const WIDGET_API_PREFIX = "/api/v1/widget";
+
 app.use(
-  cors({
-    origin: env.CLIENT_URL,
-    credentials: true,
+  cors((req, callback) => {
+    const isWidgetRequest = req.url?.startsWith(WIDGET_API_PREFIX) ?? false;
+    callback(null, isWidgetRequest ? { origin: true } : { origin: env.CORS_ORIGINS, credentials: true });
   }),
 );
 app.use(cookieParser());
