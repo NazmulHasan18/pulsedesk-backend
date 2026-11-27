@@ -5,6 +5,7 @@ import catchAsync from "../utils/catchAsync.js";
 import { verifyToken, TJwtPayload } from "../utils/jwt.js";
 import env from "../config/env.js";
 import { prisma } from "../lib/prisma.js";
+import { AgentRole } from "@prisma/client";
 
 declare global {
   namespace Express {
@@ -14,6 +15,10 @@ declare global {
         customer: { id: string; publicId: string; externalId: string };
       };
       user?: TJwtPayload;
+      // Set for agent tokens. The token carries the publicId; services that
+      // write foreign keys need the internal id, and role checks should use
+      // the current role from the database rather than the one in the token.
+      agent?: { id: string; publicId: string; name: string; role: AgentRole; companyId: string };
     }
   }
 }
@@ -72,6 +77,11 @@ const auth = (...permissions: Permission[]) => {
       const agent = await prisma.agent.findUnique({
         where: { publicId: decoded.id },
         select: {
+          id: true,
+          publicId: true,
+          name: true,
+          role: true,
+          companyId: true,
           tokenVersion: true,
           isActive: true,
         },
@@ -84,6 +94,14 @@ const auth = (...permissions: Permission[]) => {
       if (!agent.isActive) {
         throw new AppError(httpStatus.FORBIDDEN, "Your account is deactivated");
       }
+
+      req.agent = {
+        id: agent.id,
+        publicId: agent.publicId,
+        name: agent.name,
+        role: agent.role,
+        companyId: agent.companyId,
+      };
     } else {
       const superAdmin = await prisma.superAdmin.findUnique({
         where: { publicId: decoded.id },

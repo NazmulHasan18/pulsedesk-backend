@@ -34,10 +34,17 @@ const sendMessage = async (
   conversationRef: string,
   senderType: MessageSender,
   payload: ISendMessagePayload,
-  opts?: { customerId?: string },
+  opts?: { customerId?: string; agent?: { id: string; role: "ADMIN" | "AGENT" } },
 ) => {
   const conversation = await getConversationOrThrow(companyId, conversationRef);
   assertOwnership(conversation.customerId, opts?.customerId);
+
+  // One agent per conversation: an agent claims it before replying. Admins
+  // may always step in.
+  const agent = opts?.agent;
+  if (agent && agent.role !== "ADMIN" && conversation.assignedAgentId !== agent.id) {
+    throw new AppError(403, "Claim this conversation before replying");
+  }
 
   const { clientMessageId } = payload;
   if (clientMessageId) {
@@ -74,6 +81,9 @@ const sendMessage = async (
         });
         reopened = count > 0;
       }
+
+      // Inbox lists sort by last activity.
+      await tx.conversation.update({ where: { id: conversation.id }, data: { updatedAt: new Date() } });
 
       return { message, reopened };
     });

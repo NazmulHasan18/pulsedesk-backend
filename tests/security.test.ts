@@ -71,7 +71,7 @@ describe("conversation assignment", () => {
     request(app)
       .patch(`/api/v1/conversations/${t.conversation.publicId}/assign`)
       .set("authorization", `Bearer ${token}`)
-      .send({ agentId: t.agent.id });
+      .send({ agentPublicId: t.agent.publicId });
 
   it("is forbidden for a regular agent", async () => {
     const res = await assign(a, agentToken(a.agent));

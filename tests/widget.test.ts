@@ -219,13 +219,13 @@ describe("conversation status rules", () => {
     const conversation = await prisma.conversation.create({
       data: { companyId: a.company.id, customerId: a.customer.id },
     });
-    const assign = (agentId: string | null) =>
+    const assign = (agentPublicId: string | null) =>
       request(app)
         .patch(`/api/v1/conversations/${conversation.publicId}/assign`)
         .set("authorization", `Bearer ${agentToken(a.admin)}`)
-        .send({ agentId });
+        .send({ agentPublicId });
 
-    expect((await assign(a.agent.id)).body.data.status).toBe("ACTIVE");
+    expect((await assign(a.agent.publicId)).body.data.status).toBe("ACTIVE");
     expect((await assign(null)).body.data.status).toBe("WAITING");
   });
 });

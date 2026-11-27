@@ -14,7 +14,7 @@ export interface IUpdatePriorityPayload {
 }
 
 export interface IAssignAgentPayload {
-  agentId: string | null; // null = unassign
+  agentPublicId: string | null; // null = unassign
 }
 
 export interface IAddLabelPayload {

@@ -3,12 +3,54 @@ import catchAsync from "../../utils/catchAsync.js";
 import sendResponse from "../../utils/sendResponse.js";
 import { ConversationService } from "./conversation.service.js";
 import { IActor } from "./conversation.interface.js";
+import { InboxService, InboxView } from "./conversation.inbox.js";
+import { ConversationValidation } from "./conversation.validation.js";
+import AppError from "../../utils/AppError.js";
 
 // Adjust req.user field names to match your actual JWT payload shape
 const getActor = (req: Request): IActor => ({
   id: req.user!.id,
   type: req.user!.userType === "superadmin" ? "SUPERADMIN" : "AGENT",
 });
+
+// Inbox endpoints are for company agents/admins only (not super admins).
+const inboxAgent = (req: Request) => {
+  if (!req.agent) throw new AppError(403, "Only company agents can use the inbox");
+  return req.agent;
+};
+
+const getInbox = catchAsync(async (req: Request, res: Response) => {
+  const agent = inboxAgent(req);
+  // validateRequest checks the query but doesn't write the parsed values back.
+  const { query } = ConversationValidation.inboxQuerySchema.parse({ query: req.query });
+  const result = await InboxService.listInbox(agent.companyId, agent, query as { view: InboxView; page?: number; limit?: number });
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Inbox retrieved successfully",
+    data: result.data,
+    meta: result.meta,
+  });
+});
+
+const getInboxCounts = catchAsync(async (req: Request, res: Response) => {
+  const agent = inboxAgent(req);
+  const result = await InboxService.inboxCounts(agent.companyId, agent);
+  sendResponse(res, { statusCode: 200, success: true, message: "Inbox counts retrieved", data: result });
+});
+
+const inboxAction = (action: keyof Pick<typeof InboxService, "claim" | "unclaim" | "resolve" | "reopen">, message: string) =>
+  catchAsync(async (req: Request, res: Response) => {
+    const agent = inboxAgent(req);
+    const result = await InboxService[action](agent.companyId, req.params.publicId as string, agent, getActor(req));
+    sendResponse(res, { statusCode: 200, success: true, message, data: result });
+  });
+
+const claimConversation = inboxAction("claim", "Conversation claimed");
+const unclaimConversation = inboxAction("unclaim", "Conversation released to the waiting queue");
+const resolveConversation = inboxAction("resolve", "Conversation resolved");
+const reopenConversation = inboxAction("reopen", "Conversation reopened");
 
 const createConversation = catchAsync(async (req: Request, res: Response) => {
   const companyId = req.user!.companyId as string;
@@ -89,12 +131,12 @@ const assignAgent = catchAsync(async (req: Request, res: Response) => {
   const companyId = req.user!.companyId as string;
   const publicId = req.params.publicId as string;
 
-  const result = await ConversationService.assignAgent(companyId, publicId, req.body.agentId, getActor(req));
+  const result = await ConversationService.assignAgent(companyId, publicId, req.body.agentPublicId, getActor(req));
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: req.body.agentId ? "Agent assigned successfully" : "Agent unassigned successfully",
+    message: req.body.agentPublicId ? "Agent assigned successfully" : "Agent unassigned successfully",
     data: result,
   });
 });
@@ -182,6 +224,12 @@ const getHistory = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const ConversationController = {
+  getInbox,
+  getInboxCounts,
+  claimConversation,
+  unclaimConversation,
+  resolveConversation,
+  reopenConversation,
   createConversation,
   getConversations,
   getConversationDetail,

@@ -7,7 +7,7 @@ import { ConversationRealtime } from "./conversation.realtime.js";
 import { REALTIME_EVENTS } from "../../realtime/realtime.constants.js";
 
 const conversationInclude = {
-  customer: true,
+  customer: { omit: { visitorKeyHash: true } },
   assignedAgent: {
     select: { id: true, publicId: true, name: true, email: true, role: true },
   },
@@ -113,7 +113,6 @@ const getConversationDetail = async (companyId: string, publicId: string) => {
     where: { publicId, companyId },
     include: {
       ...conversationInclude,
-      messages: { orderBy: { createdAt: "asc" } },
       notes: {
         orderBy: { createdAt: "desc" },
         include: { author: { select: { id: true, name: true, email: true } } },
@@ -125,7 +124,11 @@ const getConversationDetail = async (companyId: string, publicId: string) => {
     throw new AppError(404, "Conversation not found");
   }
 
-  return conversation;
+  const customerConversationCount = await prisma.conversation.count({
+    where: { companyId, customerId: conversation.customerId },
+  });
+
+  return { ...conversation, customerConversationCount };
 };
 
 const updateStatus = async (
@@ -182,15 +185,34 @@ const updatePriority = async (
   return updated;
 };
 
-const assignAgent = async (companyId: string, publicId: string, agentId: string | null, actor: IActor) => {
+// Admin assign / reassign / unassign. The body names the agent by publicId
+// (the only agent id the dashboard ever sees).
+//
+// Race safety: we read the conversation, decide the new status from what we
+// read, then write with "assignee and status are still what we read" in the
+// WHERE clause. If an agent claimed, released or resolved it in between, the
+// update matches zero rows and we answer 409 instead of silently overwriting.
+const assignAgent = async (
+  companyId: string,
+  publicId: string,
+  agentPublicId: string | null,
+  actor: IActor,
+) => {
   const conversation = await findByPublicIdOrThrow(companyId, publicId);
 
-  if (agentId) {
-    const agent = await prisma.agent.findFirst({ where: { id: agentId, companyId } });
-    if (!agent) {
-      throw new AppError(404, "Agent not found in this company");
-    }
+  let agentId: string | null = null;
+  if (agentPublicId) {
+    const agent = await prisma.agent.findFirst({
+      where: { publicId: agentPublicId, companyId },
+      select: { id: true, isActive: true },
+    });
+    if (!agent) throw new AppError(404, "Agent not found in this company");
+    if (!agent.isActive) throw new AppError(400, "This agent is deactivated and can't take conversations");
+    agentId = agent.id;
   }
+
+  // Already in the requested state: nothing to change, nothing to log.
+  if (conversation.assignedAgentId === agentId) return conversation;
 
   // Assigning a waiting chat makes it ACTIVE; unassigning an active chat puts
   // it back in the WAITING queue. Resolved/closed/AI chats keep their status.
@@ -198,9 +220,20 @@ const assignAgent = async (companyId: string, publicId: string, agentId: string 
   if (agentId && conversation.status === ConversationStatus.WAITING) status = ConversationStatus.ACTIVE;
   if (!agentId && conversation.status === ConversationStatus.ACTIVE) status = ConversationStatus.WAITING;
 
-  const updated = await prisma.conversation.update({
-    where: { id: conversation.id },
+  const { count } = await prisma.conversation.updateMany({
+    where: {
+      id: conversation.id,
+      assignedAgentId: conversation.assignedAgentId,
+      status: conversation.status,
+    },
     data: { assignedAgentId: agentId, status },
+  });
+  if (count === 0) {
+    throw new AppError(409, "This conversation changed while you were assigning it. Refresh and try again");
+  }
+
+  const updated = await prisma.conversation.findUniqueOrThrow({
+    where: { id: conversation.id },
     include: conversationInclude,
   });
 

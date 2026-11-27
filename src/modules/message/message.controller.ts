@@ -23,7 +23,9 @@ const sendAgentMessage = catchAsync(async (req: Request, res: Response) => {
     throw new AppError(400, "conversation id is required");
   }
 
-  const result = await MessageService.sendMessage(companyId, conversationId as string, "AGENT", req.body);
+  const result = await MessageService.sendMessage(companyId, conversationId as string, "AGENT", req.body, {
+    agent: req.agent,
+  });
 
   sendSendResult(res, result);
 });

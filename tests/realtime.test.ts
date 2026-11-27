@@ -23,6 +23,11 @@ beforeAll(async () => {
 
   a = await createTenant("ra");
   b = await createTenant("rb");
+  // Agents reply only to conversations they have claimed.
+  await prisma.conversation.update({
+    where: { id: a.conversation.id },
+    data: { status: "ACTIVE", assignedAgentId: a.agent.id },
+  });
 });
 
 afterEach(() => {
@@ -208,7 +213,7 @@ describe("conversation updates", () => {
     const res = await request(app)
       .patch(`/api/v1/conversations/${a.conversation.publicId}/assign`)
       .set("authorization", `Bearer ${agentToken(a.admin)}`)
-      .send({ agentId: a.agent.id });
+      .send({ agentPublicId: a.agent.publicId });
     expect(res.status).toBe(200);
 
     expect(await visitorStatus).toEqual({

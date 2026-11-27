@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ConversationStatus, ConversationPriority, ConversationSource } from "@prisma/client";
+import { INBOX_VIEWS } from "./conversation.inbox.js";
 
 const createConversationSchema = z.object({
   body: z.object({
@@ -22,7 +23,8 @@ const updatePrioritySchema = z.object({
 
 const assignAgentSchema = z.object({
   body: z.object({
-    agentId: z.string().cuid().nullable(),
+    // The agent's publicId; null unassigns.
+    agentPublicId: z.string().cuid().nullable(),
   }),
 });
 
@@ -49,7 +51,16 @@ const getConversationsQuerySchema = z.object({
   }),
 });
 
+const inboxQuerySchema = z.object({
+  query: z.object({
+    view: z.enum(INBOX_VIEWS).default("waiting"),
+    page: z.coerce.number().int().positive().optional(),
+    limit: z.coerce.number().int().positive().max(100).optional(),
+  }),
+});
+
 export const ConversationValidation = {
+  inboxQuerySchema,
   createConversationSchema,
   updateStatusSchema,
   updatePrioritySchema,
